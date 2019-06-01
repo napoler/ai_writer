@@ -9,7 +9,6 @@ __pycache__/
 # 屏蔽数据文件
 data/
 cache/
-indexdir/
 
 # Distribution / packaging
 .Python

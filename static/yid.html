@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!-- saved from url=(0045)https://demo.demohuo.top/jquery/29/2923/demo/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Intro.js - Better introductions for websites and features with a step-by-step guide for your projects.">
+<meta name="author" content="Richer">
+<title>jQuery行间元素拖拽排序插件</title>
+<!-- styles -->
+<link type="text/css" rel="stylesheet" href="./yid_files/bootstrap-3.3.4.css">
+<link type="text/css" rel="stylesheet" href="./yid_files/element-move.css">
+<script type="text/javascript" src="./yid_files/jquery.min.js.下载"></script>
+<script type="text/javascript" src="./yid_files/element-move.js.下载"></script>
+</head>
+
+<body>
+<div id="elementMove" class="element-move mouse-down">
+    <div id="cover" class="cover" style="display: none;"></div>
+    <div class="ul col-lg-12">
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">1.2</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">1</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">1.1</div>
+                </div>
+                
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">1.3</div>
+                </div>
+            </div>
+        </div>
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">2.2</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">2</div>
+                </div>
+                
+                
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">2.3</div>
+                </div>
+            </div>
+        </div>
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">5.3</div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">5.1</div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">4</div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">4.1</div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">4.3</div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">2.1</div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">4.2</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">3</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">3.1</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">3.2</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">3.3</div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div><div class="li-child">
+                    <div class="col-lg-12 li-child-content">5.2</div>
+                </div>
+                <div class="li-child disabled">
+                    <div class="col-lg-12 li-child-content">disabled</div>
+                </div>
+                
+                
+                
+            </div>
+        </div>
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll disabled">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">6</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">6.1</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">6.2</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">6.3</div>
+                </div>
+            </div>
+        </div>
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">7</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">7.1</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">7.2</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">7.3</div>
+                </div>
+            </div>
+        </div>
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">8</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">8.1</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">8.2</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">8.3</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">8.4</div>
+                </div>
+            </div>
+        </div>
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">9</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">9.1</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">9.2</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">9.3</div>
+                </div>
+            </div>
+        </div>
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">10</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">10.1</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">10.2</div>
+                </div>
+                <div class="li-child">
+                    <div class="col-lg-12 li-child-content">10.3</div>
+                </div>
+            </div>
+        </div>
+        <div class="list-line point-events row">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="moveDiv" class="scroll" style="display: none; top: 36px;"></div>
+        <div id="moveChildDiv" class="row" style="display: none; width: 300px; top: 614px; left: 641px;"><div class="col-lg-12 li-child-content">5.3</div></div>
+        <div class="scroll hidden-li">
+            <div class="li li-inline-flex">
+                <div class="li-child-list-line point-events col-lg-1">
+                    <div class="col-lg-12 li-child-content"></div>
+                </div>
+            </div>
+        </div>
+        <div class="list-line point-events row hidden-list-line">
+            <div class="col-lg-12">
+                <div class="new-line-pointer">
+                    <div class="col-lg-12">
+                        <div class="creating-list-line">
+                            <div class="col-lg-12 creating-li-child-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+elementMove('#elementMove', 'mousedown');
+</script>
+</body></html>

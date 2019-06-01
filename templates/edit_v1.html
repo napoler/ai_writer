@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- Standard Meta -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <!-- <link rel="stylesheet" type="text/css" href="/static/style.css"> -->
+  <script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script>
+  <link crossorigin="anonymous" integrity="sha384-ATvSpJEmy1egycrmomcFxVn4Z0A6rfjwlzDQrts/1QRerQhR9EEpEYtdysLpQPuQ"
+    href="//lib.baomitu.com/semantic-ui/2.4.1/semantic.min.css" rel="stylesheet">
+  <script crossorigin="anonymous" integrity="sha384-6urqf2sgCGDfIXcoxTUOVIoQV+jFr/Zuc4O2wCRS6Rnd8w0OJ17C4Oo3PuXu8ZtF"
+    src="//lib.baomitu.com/semantic-ui/2.4.1/semantic.min.js"></script>
+  <!-- 拖拽插件 -->
+
+
+  <!-- <script src="/static/js/jquery-sortable-lists.min.js"></script> -->
+  <!-- http://psfpro.github.io/bootstrap-html5sortable/ -->
+  <!-- <script src="/static/js/jquery.sortable.min.js"></script> -->
+
+  <!-- <script src="https://cdn.jsdelivr.net/npm/jquery-sortablejs@latest/jquery-sortable.js"></script> -->
+  <script src="/static/js/jquery-sortable-min.js"></script>
+  <!-- https://johnny.github.io/jquery-sortable/ -->
+  <!-- https://johnny.github.io/jquery-sortable/ -->
+
+  <script>
+    $(function () {
+
+      var group = $("ol.serialization").sortable({
+        group: 'serialization',
+        delay: 500,
+        onDrop: function ($item, container, _super) {
+          var data = group.sortable("serialize").get();
+
+          var jsonString = JSON.stringify(data, null, ' ');
+
+          $('#serialize_output2').text(jsonString);
+          _super($item, container);
+        }
+      });
+
+
+
+  
+
+      /****
+      点击语句添加到编辑列表
+      
+      *******/
+      $(document).on('click', '.sentence', function () {
+        // $(".aClass li .button").click(function () {
+         
+        var txt = $(this).addClass("red").text().replace(/(^s*)|(s*$)/g, "");
+
+        console.log(txt)
+
+        uuid = uuidv4()
+        txt = txt.replace(/\s+/g, "");
+
+        var ju = ' <li id="id-' + uuid + '">'
+          + txt
+          + '</li>'
+        $("#edit-list").append(ju);
+
+
+
+        $.get(
+          "/p/nlp",
+          { text: txt },
+          function (data) {
+            // ...
+            console.log('分词结果', data)
+            var textLong = ''
+            $.each(data.items, function (key, value) {
+              console.log(key + ": " + value);
+              console.log(value);
+              pr = value.prob
+
+              console.log('pr', pr);
+              n = 0;
+              // var k=3;
+              switch (true) {
+                case pr > 0.01:
+                  n = 1;
+                  console.log('等级：', n);
+                  break;
+                case pr > 0.0001:
+                  n = 2;
+                  console.log('等级：', n);
+                  break;
+                case pr > 0.000001:
+                  n = 3;
+                  console.log('等级：', n);
+                  break;
+                case pr > 0.00000001:
+                  n = 4;
+                  console.log('等级：', n);
+                  break;
+                case pr > 0.000000001:
+                  n = 5;
+                  console.log('等级：', n);
+                  break;
+                default:
+                  n = 0;
+                  console.log('等级：', n);
+                // case 5:
+                //   n="Today it's Friday";
+                //   break;
+
+              }
+
+
+
+
+
+
+
+
+
+
+              textLong = textLong + "<span class='gm gm" + n + "'>" + value.word + "</span>"
+
+
+            });
+            pplClass = 'ppl_0'
+            if (data.ppl > 1000) {
+              pplClass = 'ppl_2'
+            } else if (data.ppl > 500) {
+              pplClass = 'ppl_1'
+
+            }
+
+            $('#id-' + uuid + ' .edit_box_form').append(
+              '<div class="column">' +
+              'ppl评分:' + data.ppl +
+              '<div class="ppl ' + pplClass + '">' +
+              textLong +
+              "</div>" + "</div>"
+
+            );
+
+
+            // return data
+          },
+          "json"
+        );
+        // https://johnny.github.io/jquery-sortable/
+        // txt.appendto(this).p;
+        $('.list-group-sortable-connected').sortable({
+          placeholderClass: 'list-group-item',
+          connectWith: '.connected'
+        });
+
+
+
+      });
+
+
+
+
+      // $(document).on('click', '.edit-juzi', function () {
+
+      //   var juzi = $(this).parent().val();
+
+      //   $('.dimmer').dimmer('show');
+
+
+      // });
+      function isInArray(arr, value) {
+        // console.log(arr)
+        value = Number(value)
+        for (var i = 0; i < arr.length; i++) {
+          // console.log(arr[i])
+          // console.log(i)
+          // console.log(value)
+          if (value === arr[i]) {
+            return true;
+          }
+        }
+        return false;
+      }
+      function get_url_content(url) {
+
+        $.get(
+          "/json/url_content",
+          {
+            url: url,
+
+          },
+          function (data) {
+
+            console.log(data);
+            if (data.sentence.length > 2) {
+
+
+
+
+              textLong = '<div class ="article" >' + ''
+              for (var item in data.keyphrases) {
+                console.log("obj." + item + data.keyphrases[item]);
+                textLong = textLong + "关键短语." + item
+              }
+
+
+
+
+
+
+              var summarys = new Array();
+              for (item in data.summary) {
+                console.log(data.summary[item]['sentence'])
+                // summarys.push(data.summary[item]['sentence'])
+                summarys.push(data.summary[item]['index'])
+
+              }
+
+              console.log("summarys." + summarys);
+
+
+
+
+              // 这里是构建文章
+              var sentences = ''
+              for (item in data.sentence) {
+                console.log('item', item)
+                console.log('isInArray', isInArray(summarys, item))
+
+
+                var cl = 'sentence'
+                if (isInArray(summarys, item)) {
+                  console.log('摘要选择', item)
+                  cl = 'sentence summary'
+                }
+
+
+
+
+                sentences = sentences + '<span class ="' + cl + '" id ="">'
+                  + data.sentence[item]
+                  + '</span>'
+
+
+
+
+              }
+
+
+              textLong = textLong + sentences
+
+              textLong = textLong + ' <div class="">';
+              for (var item in data.keywords) {
+                // console.log("summarys." + item +value.keyphrases[item]['sentence']);
+                // console.log("summarys." + item + value.keywords[item]['word']);
+                textLong = textLong + '<span>'
+                  + data.keywords[item]['word']
+                  //  +'</div><button class="ui button use">'
+                  //   +'  使用</button></li>'
+                  + '  ,</span>'
+
+              }
+              textLong = textLong + ' </div>';
+
+              $('#slist').prepend(textLong);
+            }
+          })
+
+      }
+
+
+
+
+
+
+      $(document).on('click', '.prediction-button', function () {
+
+        var keyword = $('#search-input').val();
+        console.log('搜索关键词:', keyword);
+
+        $.get(
+          "/json/search_baidu",
+          {
+            keyword: keyword,
+            num: 10
+          },
+          function (data) {
+            // ...
+            console.log('搜索结果：', data)
+            var textLong = ''
+            $.each(data, function (key, value) {
+
+              console.log(key + ": " + value['url']);
+              console.log(value);
+              // textLong = '' + '开始'
+
+              get_url_content(value['url'])
+
+            },
+              "json"
+            );
+
+          });
+      });
+
+
+      // 搜索
+
+      // #slist
+      $(document).on('click', '#search-button', function () {
+
+        var keyword = $('#search-input').val();
+        console.log('搜索关键词:', keyword);
+
+        $.get(
+          "/json/search_baidu",
+          {
+            keyword: keyword,
+            num: 10
+          },
+          function (data) {
+            // ...
+            console.log('搜索结果：', data)
+            var textLong = ''
+            $.each(data, function (key, value) {
+
+              console.log(key + ": " + value['url']);
+              console.log(value);
+              // textLong = '' + '开始'
+
+              get_url_content(value['url'])
+
+            },
+              "json"
+            );
+
+          });
+      });
+
+
+
+
+      // 聚焦语句编辑器时候执行
+      $(document).on('focus', '.edit_box_textarea', function () {
+
+        console.log('开始编辑语句')
+        $(this).addClass("bor");
+
+      });
+      // 失去焦点时候执行
+      // $(document).on('blur', '.edit_box_textarea', function () {
+
+      // $(document).on("input propertychange", ".edit_box_textarea", function () {
+      $(document).on("click", ".edit_box_form .button", function () {
+        console.log('失去焦编辑语句')
+        $(this).removeClass("bor");
+
+        var t = $(this)
+        var id = $(this).parent().find('.edit_box_textarea');
+
+        console.log('id', id)
+        var txt = id.val();
+        // id.parent().parent().parent().parent().children('review').text(txt)
+        id.css("color", "blue");
+
+        // 提交更新
+        $('#content-review .content').empty();
+
+        $('#content-review .content').append('<ol></ol>');
+        $('#edit-list .item .edit_box_textarea').each(function () {
+          // doSomethingWith($(this).text());
+          // 依次对每个 div 执行 doSomethingWith()，
+          // 将当前 DIV 中的文本作为参数
+          var text = $(this).val();
+          console.log(text);
+          $('#content-review .content ol').append('<li><a href="">' + text + '。</a></li>');
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        $.get(
+          "/p/nlp",
+          { text: txt },
+          function (data) {
+            // ...
+            console.log('分词结果', data)
+            var textLong = ''
+            $.each(data.items, function (key, value) {
+              console.log(key + ": " + value);
+              console.log(value);
+              //   if (value.word.replace(/(^s*)|(s*$)/g, "").length==0){
+
+              //   }else{
+              //      textLong=textLong+"<span>"+value.word+"</span>"
+              // }
+              pr = value.prob
+
+
+
+
+
+              console.log('pr', pr);
+              n = 0;
+              // var k=3;
+              switch (true) {
+                case pr > 0.01:
+                  n = 1;
+                  console.log('等级：', n);
+                  break;
+                case pr > 0.0001:
+                  n = 2;
+                  console.log('等级：', n);
+                  break;
+                case pr > 0.000001:
+                  n = 3;
+                  console.log('等级：', n);
+                  break;
+                case pr > 0.00000001:
+                  n = 4;
+                  console.log('等级：', n);
+                  break;
+                case pr > 0.000000001:
+                  n = 5;
+                  console.log('等级：', n);
+                  break;
+                default:
+                  n = 0;
+                  console.log('等级：', n);
+                // case 5:
+                //   n="Today it's Friday";
+                //   break;
+
+              }
+
+
+
+
+
+
+
+
+
+
+              textLong = textLong + "<span class='gm gm" + n + "'>" + value.word + "</span>"
+
+            });
+            pplClass = 'ppl_0'
+            if (data.ppl > 1000) {
+              pplClass = 'ppl_2'
+            } else if (data.ppl > 500) {
+              pplClass = 'ppl_1'
+
+            }
+            console.log('分词结果', textLong)
+            id.addClass(pplClass + " ppl")
+
+
+            //      '<div class="one wide column">' +
+            //   '<div class="review">' +
+            //  '评分:'+
+
+            //   '</div>' +
+            //   '</div>' +
+
+
+            n = 0;
+            // var k=3;
+            switch (true) {
+              case data.ppl > 0:
+                n = 1;
+                console.log('等级：', n);
+                break;
+              case data.ppl > 500:
+                n = 2;
+                console.log('等级：', n);
+                break;
+              case data.ppl > 1000:
+                n = 3;
+                console.log('等级：', n);
+                break;
+              case data.ppl > 2000:
+                n = 4;
+                console.log('等级：', n);
+                break;
+              case data.ppl > 5000:
+                n = 5;
+                console.log('等级：', n);
+                break;
+              default:
+                n = 0;
+                console.log('等级：', n);
+              // case 5:
+              //   n="Today it's Friday";
+              //   break;
+
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            t.parent().parent().parent().find('.review').text('评分:' + data.ppl).addClass('gm' + n);
+            t.after(
+              '<div class="column">' +
+              'ppl1评分:' + data.ppl +
+              '<div class="ppl ' + pplClass + '">' +
+              textLong +
+              "</div>" + "</div>"
+
+            );
+
+
+          });
+
+
+
+
+
+      });
+
+
+
+
+
+
+
+
+
+      // 获取预览text文章
+      $(document).on('click', '#totext', function () {
+        $('#content-review .content').empty();
+
+        $('#content-review .content').append('<ol></ol>');
+        $('#edit-list .item .edit_box_textarea').each(function () {
+          // doSomethingWith($(this).text());
+          // 依次对每个 div 执行 doSomethingWith()，
+          // 将当前 DIV 中的文本作为参数
+          var text = $(this).val();
+          console.log(text);
+          $('#content-review .content ol').append('<li>' + text + '。</li>');
+        });
+
+
+      });
+
+
+      // 点击切换开启编辑dblclick
+      $(document).on('click', '#edit-list li', function () {
+        // #移除之前的状态
+        $('#edit-list li').removeClass("editing")
+      //  自动更新之前修改的数据
+       var  t_juzi = $('#t_juzi').val();
+       if(t_juzi){
+        var  t_juzi_text = $('#editing_juzi').text();
+        $('#'+t_juzi).text(t_juzi_text);
+
+       }
+ 
+
+        var state = $(this).data('state');
+        switch (state) {
+          case 1:
+          case undefined: $(this).addClass('editing'); $(this).data('state', 2); break;
+          case 2: $(this).removeClass('editing'); $(this).data('state', 1); break;
+        }
+
+        // t_juzi
+        var id = $(this).attr('id');
+        $('#t_juzi').val(id);
+
+        // var pid = $(this).prev().attr('id');
+        // $('#p_juzi1').val(pid);
+
+        // var nid = $(this).next().attr('id');
+        // $('#n_juzi1').val(nid);
+ 
+
+
+        var text = $(this).text();
+        console.log(text)
+
+
+
+        $.get(
+          "/p/nlp",
+          { text: text },
+          function (data) {
+            // ...
+            console.log('分词结果', data)
+            var textLong = ''
+            $.each(data.items, function (key, value) {
+              console.log(key + ": " + value);
+              console.log(value);
+
+              textLong = textLong + '<li id="word'+key+'" class="ui mini button word ">'+ value.word+ "</li>"
+
+
+
+            })
+
+
+           $("#editing_juzi").html(textLong)
+           $('#editing_juzi').sortable({});
+
+
+          })
+
+
+      });
+
+
+
+
+      // 单击单词
+      // 进入单词编辑
+      $(document).on('click', '.word', function () {
+        // #移除之前的状态
+        $('.word').removeClass("red")
+
+        var state = $(this).data('state');
+        switch (state) {
+          case 1:
+          case undefined: $(this).addClass('red'); $(this).data('state', 2); break;
+          case 2: $(this).removeClass('red'); $(this).data('state', 1); break;
+        }
+        var id = $(this).attr('id');
+        var word = $(this).text();
+
+        $('#wordid').val(id);
+        $('#word_text').val(word);
+ 
+
+      
+
+
+      });
+
+
+// 修正为新的单词
+      $(document).on('click', '#up', function () {
+        // #移除之前的状态
+        var id= $('#wordid').val()
+        var text= $('#word_text').val()
+
+        $('#'+id).text(text);
+      });
+
+//添加到之前
+$(document).on('click', '#addpre', function () {
+        // #移除之前的状态
+        var id= $('#wordid').val()
+        var text= $('#word_text').val()
+        timestamp=new Date().getTime()
+        $('#'+id).before('<li id="word'+timestamp+'" class="ui mini button word">'+text+'</li>');
+     
+      });
+// 添加到之后
+      $(document).on('click', '#addnext', function () {
+        // #移除之前的状态
+        var id= $('#wordid').val()
+        var text= $('#word_text').val()
+        timestamp=new Date().getTime()
+        $('#'+id).after('<li id="word'+timestamp+'" class="ui mini button word">'+text+'</li>');
+     
+      });
+
+
+// 删除当前元素
+$(document).on('click', '#remove', function () {
+        // #移除之前的状态
+        var id= $('#wordid').val()
+        var text= $('#word_text').val()
+        timestamp=new Date().getTime()
+
+
+        var next_id = $('#'+id).next().attr('id');
+        // 默认选择下一个单词
+        var word = $('#'+next_id).text();
+        $('#wordid').val(next_id);
+        $('#word_text').val(word);
+        $('#'+next_id).addClass("red")
+
+
+        $('#'+id).remove();
+
+ });
+
+
+
+// 预测这个单词
+$(document).on('click', '#mask', function () {
+        // #移除之前的状态
+        var id= $('#wordid').val()
+        var text= $('#word_text').val()
+
+        timestamp=new Date().getTime()
+        $('#'+id).text(' [MASK] ');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      });
+
+
+// 进行改错
+$(document).on('click', '#gaicuo', function () {
+        // #移除之前的状态
+        // var id= $('#wordid').val()
+        // var text= $('#word_text').val()
+
+        // timestamp=new Date().getTime()
+        var text2 = $('#editing_juzi').text();
+        var pre_text_id = $('#t_juzi').val();
+        var text1 = $('#'+pre_text_id).prev().text();
+ 
+
+        $.post( "http://127.0.0.1:8110/json/sentence/gaicuo", { 'text1': text1, 'text2': text2 })
+          .done(function( data ) {
+            // alert( "Data Loaded: " + data );
+            console.log( data)
+            if(data.msg){
+              $("#msg").html(data.msg)
+            }
+            // $("#prediction_list").append("</hr><ul></ul>")
+            // var textLong=''
+            // $.each( data.data, function( key, value ) {
+            //   console.log(value)
+            //   textLong=textLong+"<li>"+value+"</li>"
+             
+
+            // });
+            // $("#prediction_list ul").append(textLong)
+      });
+
+
+
+
+      });
+
+
+
+
+
+
+
+
+
+
+
+
+    });
+
+// 预测下一句
+$(document).on('click', '#next', function () {
+        // #移除之前的状态
+        // var id= $('#wordid').val()
+        // var text= $('#word_text').val()
+
+        // timestamp=new Date().getTime()
+        var text2 = $('#editing_juzi').text();
+        var pre_text_id = $('#t_juzi').val();
+        var text1 = $('#'+pre_text_id).prev().text();
+        get_next_search(text1)
+ 
+      });
+ 
+
+// 预测下一句的搜索
+function get_next_search(keyword){
+  $.get(
+          "/json/search_baidu",
+          {
+            'keyword': keyword,
+            num: 10
+          },
+          function (data) {
+            // ...
+            console.log('搜索结果：', data)
+            var textLong = ''
+            $.each(data, function (key, value) {
+
+              console.log(key + ": " + value['url']);
+              console.log(value);
+              // textLong = '' + '开始'
+
+              get_next_content(value['url'])
+
+            },
+              "json"
+            );
+
+          });
+
+}
+
+function get_next_content(url) {
+
+$.get(
+  "/json/url_content",
+  {
+    url: url,
+
+  },
+  function (data) {
+
+    console.log(data);
+    if (data.sentence.length > 2) {
+    // for (item in data.sentence) {
+    //             console.log('语句为', item)
+    //             data.summary[item]['sentence']
+    // }
+    var juzi = $('#editing_juzi').text()
+    get_next_sentence_p(data.text,juzi)
+    }
+  })
+
+}
+
+
+function get_next_sentence_p(text,juzi) {
+
+ 
+  $.post( "http://127.0.0.1:8110/json/sentence/prediction", { 'text': text, 'sentence': juzi })
+          .done(function( data ) {
+            // alert( "Data Loaded: " + data );
+            console.log( data)
+            if(data.msg){
+              $("#msg").html(data.msg)
+            }
+            var textLong='<div class="article"><ol>'
+
+            $.each( data.data, function( key, value ) {
+              // if(value['next_line_prediction']>3){
+                textLong=textLong+"<li>"+value['line_number']+": "+value['next_line_prediction']+"</br><span class ='sentence'>"+value['line_to_check'] +"</span></li>"
+              // }
+              
+             
+
+            });
+             
+            textLong=textLong+ '</ol></div>'
+              $('#slist').prepend(textLong);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+      });
+
+}
+
+
+
+
+
+
+
+
+
+
+
+    function uuidv4() {
+      return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+      )
+    }
+
+// console.log(uuidv4());
+
+  </script>
+
+  <style>
+    .listsClass li {
+      display: block;
+      margin: 5px;
+      border: 1px solid #ccc;
+      padding: 3px 5px;
+      border-radius: 3px;
+      border-left: 50px solid #ececec;
+    }
+
+    #sortableListsPlaceholder {
+      background: #ececec
+    }
+
+
+    ul.aClass li {
+      padding: 5px;
+      border: 1px solid #ccc;
+      margin: 2px;
+    }
+
+    .used {
+      background: #ccc;
+    }
+
+    .juzi li {
+      display: inline-block !important;
+      margin: 2px 5px;
+      border: 1px solid #ccc;
+      padding: 3px 5px;
+      border-radius: 3px;
+      border-left: 1px solid #ececec;
+    }
+
+    div#edit-list {
+      /* height: 600px;
+      overflow-y: auto; */
+    }
+
+    .editing {
+      border: 1px solid #36d65c;
+
+    }
+
+    .ppl {
+      border: 2px solid;
+      padding: 4px;
+    }
+
+    .ppl_0 {
+      border-color: #36d65c !important;
+      ;
+    }
+
+    .ppl_1 {
+      border-color: rgba(236, 221, 7, 0.87) !important;
+      ;
+    }
+
+    .ppl_2 {
+      border-color: rgba(247, 46, 12, 0.87) !important;
+      ;
+    }
+
+    .review {
+      text-align: center;
+      padding: 10px;
+      font-size: 12px;
+      overflow: hidden;
+    }
+
+    .gm {
+      display: inline-block;
+      width: 30px;
+      height: 12px;
+    }
+
+    .gm1 {
+      background-color: rgb(221, 225, 233);
+    }
+
+    .gm2 {
+      background-color: rgb(111, 234, 147);
+    }
+
+    .gm3 {
+      background-color: rgb(234, 219, 111);
+    }
+
+    .gm4 {
+      background-color: rgb(234, 111, 124);
+    }
+
+    .gm5 {
+      background-color: rgb(246, 15, 32);
+    }
+
+    div#del-list {
+      min-height: 200px;
+    }
+
+    .content {
+      padding: 10px;
+    }
+
+    .edit_box_textarea {
+      height: 6em !important;
+      min-height: 2em !important;
+      max-height: 24em;
+      width: 100%;
+    }
+
+    .edit_box_form {
+      height: 100px;
+      overflow-y: hidden;
+    }
+
+    .open_edit_box {
+      height: 500px;
+      background: #fbf9f9;
+    }
+
+    .open_edit_box .edit_box_form {
+      height: 400px;
+      overflow-y: auto;
+    }
+
+    .edit_box {
+      /* padding: 10px 100px 10px 10px !important;
+  border: 1px solid #ccc;
+    border-radius: 5px; */
+      /* padding-left: 100px !important; */
+      background: #efefef !important;
+    }
+
+    .article {
+      margin: 50px;
+    }
+
+    .sentence {
+      /* 语句样式 */
+      padding: 5px;
+      background: #f1f1f1;
+      margin-right: 20px;
+      line-height: 35px;
+    }
+
+    .summary {
+      background: #a1cca5;
+    }
+
+    span.sentence.red {
+      background: #f54c4c;
+    }
+
+    body.dragging,
+    body.dragging * {
+      cursor: move !important;
+    }
+
+    ol#edit-list li {
+      border: #d4d4d4 1px solid;
+      margin: 5px;
+      padding: 10px;
+    }
+.editing{
+  background: #f5814e;
+}
+.word{
+  padding: 5px;
+     
+    background: #eae7e7;
+    line-height: 40px;
+    border-radius: 2px;
+    margin: 5px !important;
+ 
+
+}
+ 
+  
+div#editing_juzi {
+    background: #333;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+div#editing_box {
+    margin: 0;
+    min-height: 400px;
+}
+  
+  
+    .dragged {
+      position: absolute;
+      opacity: 0.5;
+      z-index: 2000;
+      background: #36d65c;
+      left: 0;
+      top: 0;
+    }
+
+    ol.example li.placeholder {
+      position: relative;
+      /** More li styles **/
+    }
+
+    ol.example li.placeholder:before {
+      position: absolute;
+      /** Define arrowhead **/
+    }
+  </style>
+
+</head>
+
+<body>
+
+
+  <div class="ui fixed inverted menu">
+    <div class="ui container">
+      <a href="fixed.php#" class="header item">
+
+        写作助手
+      </a>
+
+    </div>
+  </div>
+
+
+
+
+
+
+  <div class="ui two column stackable grid">
+
+    <div class="ten wide column">
+      <div class="content">
+        <div class="ui segment">
+          <form class="ui reply form">
+            <div class="ui middle aligned divided list list-group-sortable-connected" id="edit-list-warp">
+              <h2>编辑器</h2>
+              <h3>Ai审查语句流畅度：</h3>
+
+              <p class="gm-dengji">
+                等级1<span class='gm1 gm'></span>
+                等级2<span class='gm2 gm'></span>
+                等级3<span class='gm3 gm'></span>
+                等级4<span class='gm4 gm'></span>
+                等级5<span class='gm5 gm'></span></p>
+
+            </div>
+          </form>
+          <ol id='edit-list' class='serialization vertical'>
+
+            <li data-id='3' data-name='Item 4'>
+              段落
+              <ol>
+
+
+              </ol>
+            </li>
+            <li>
+              段落
+              <ol>
+
+              </ol>
+            </li>
+
+            <li>
+              段落
+              <ol>
+
+              </ol>
+            </li>
+
+            <li>
+              段落
+              <ol>
+
+              </ol>
+            </li>
+
+            <li>
+              段落
+              <ol>
+
+              </ol>
+            </li>
+          </ol>
+
+
+          <ol class='serialization vertical'>
+            <li data-id='0' data-name='Item 1'>Item 1</li>
+            <li data-id='1' data-name='Item 2'>Item 2</li>
+            <li data-id='2' data-name='Item 3'>Item 3</li>
+            <li data-id='3' data-name='Item 4'>Item 4</li>
+            <li data-id='4' data-name='Item 5'>Item 5</li>
+            <li data-id='5' data-name='Item 6'>Item 6</li>
+          </ol>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+
+
+    </div>
+    <div class="six wide column">
+
+
+
+     
+
+
+
+      <div id="target">
+
+        <button id="totext" class="ui button">
+          获取text
+        </button>
+      </div>
+
+
+
+
+
+
+<!-- 这里是句子编辑 -->
+      <div id="editing_box">
+  <!-- 这里包含当前选择的语句id -->
+          <!-- <input id='p_juzi1' type="hidden" > -->
+          <input id='t_juzi' type="hidden">
+          <!-- <input id='n_juzi1' type="hidden" > -->
+
+          <ul  class="ui inverted segment" id="editing_juzi"> 
+
+    
+          </ul>
+          <div id="editing_word_box">
+
+              <div class="ui form">
+                  <input id='wordid' type="hidden" name="wordid" value>
+                  <div class="field">
+                    <label>词语</label>
+                    <input id= 'word_text' type="text" name="word_text" >
+                  </div>
+                  <div class="field">
+                    <label>Last Name</label>
+                    <input type="text" name="last-name" placeholder="Last Name">
+                  </div>
+                  <div class="field">
+                    <div class="ui checkbox">
+                      <input type="checkbox" tabindex="0" class="hidden">
+                      <label>I agree to the Terms and Conditions</label>
+                    </div>
+                  </div>
+         
+                  <button id='up' class="ui red button " type="submit">提交</button>
+                  <button id='addpre' class="ui orange button">添加到前面</button>
+                  <button id='addnext' class="ui yellow button">添加到之后</button>
+                  <button id='remove' class="ui olive button">删除</button>
+                  <button id='mask' class="ui green button">预测</button>
+                  <button id='gaicuo' class="ui green button">改错</button>
+                  <button id='next' class="ui green button">猜下一句</button>
+            
+            
+                </div>
+
+
+
+   
+            </div>
+
+  </div>
+
+<!-- 句子编辑结束 -->
+
+
+
+
+
+
+
+
+      <div id="content-review" class="ui segment column">
+
+        <div class="content">
+
+
+        </div>
+      </div>
+      <h2>垃圾箱</h2>
+      <div
+        class="ui segment middle aligned divided list list-group-sortable-connected ui one column doubling stackable grid"
+        id="del-list">
+
+
+
+
+
+      </div>
+
+
+
+
+
+
+    </div>
+  </div>
+
+  <div class="column">
+
+
+
+
+
+
+    <div class="ui segment">
+
+      <h2>获取数据</h2>
+      <div class="ui action input">
+        <input id="search-input" type="text" placeholder="搜索...">
+        <button id="search-button" class="ui button">搜索</button>
+      </div>
+
+      <div id="slist" class="column">
+
+      </div>
+
+
+
+
+
+      <h1>摘要页面</h1>
+      {{content['or_url']}}
+
+      {% for one_content in content %}
+      {% if one_content['status']==True %}
+
+
+
+      <!-- summary_keywords -->
+
+      <!-- {{one_content}} -->
+
+      <a href="/p/summary?url={{one_content['or_url']}}&num={{one_content['num']}}">查看源数据</a>
+      <h2>摘要</h2>
+      <ul class="aClass">
+
+        {% for item in one_content['summarys'] %}
+        <li>
+          ({{item['index']}}) {{item['weight']}} :
+          <div class="summary">
+
+
+            {{item['sentence']}}
+          </div>
+          <button class="ui button use">
+            使用
+          </button></li>
+        {% endfor %}
+      </ul>
+
+
+
+      <h2>关键词</h2>
+      <ol>
+
+        {% for item in one_content['keywords'] %}
+        <li>关键词:<a href="/p/edit?keyword={{item['word']}}&num={{one_content['num']}}">{{item['word']}}</a>
+          weight:{{item['weight']}}
+        </li>
+        {% endfor %}
+      </ol>
+
+      <h2>关键短语</h2>
+      <ol>
+
+        {% for item in one_content['keyphrases'] %}
+        <li>关键短语: <a href="/p/edit?keyword={{item}}&num={{one_content['num']}}">{{item}}</a></li>
+        {% endfor %}
+      </ol>
+
+
+      <h2>原文章</h2>
+      {{one_content['text']}}
+
+      {% endif %}
+      {% endfor %}
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+
+</html>

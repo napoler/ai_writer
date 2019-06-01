@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Datastore and Firebase Auth Example</title>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <link type="text/css" rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+  <h1>1是 个测试网页</h1>
+
+  <h2>Last 10 visits</h2>
+  {% for time in times %}
+  <p>{{ time }}</p>
+  {% endfor %}
+
+
+  <dl>
+    {% for item in text %}
+    <dt>{{ item.url }}</dt>
+    <dd>
+      <!-- {{ item.summarize }} -->
+      <ol>
+        {% for ju in item.summarize %}
+        <li>
+          {{ ju }}
+        </li>
+        {% endfor %}
+
+      </ol>
+
+
+
+    </dd>
+    <dd>{{ item.keywords }}</dd>
+    {% endfor %}
+  </dl>
+</body>
+
+</html>

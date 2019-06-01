@@ -1,0 +1,285 @@
+/**
+ * Created by yangry on 2017/7/15.
+ */
+function elementMove(elementMoveId, mouseType) {
+    // 整体的元素选择器
+    var includeelementMoveId = elementMoveId + ' ';
+    // 监听事件的JQuery对象
+    var liDom = $(includeelementMoveId + '.ul .scroll:not(.disabled) .li');
+    var liChildDom = $(includeelementMoveId + '.ul .scroll:not(.disabled) .li .li-child:not(.disabled) > .li-child-content');
+    var liGlyDom = $(includeelementMoveId + '.ul .scroll:not(.disabled) .li .li-child:not(.disabled) > .li-child-content > .glyphicon');
+    // 移动事件所用的JQuery对象
+    var moveDiv = $(includeelementMoveId + '#moveDiv');
+    var moveChildDiv = $(includeelementMoveId + '#moveChildDiv');
+    var movingDiv = moveDiv;
+    var coverDiv = $(includeelementMoveId + '#cover');
+    // 监听悬浮事件所用的JQuery对象
+    var iconSpan = $('.li-child-content > .glyphicon');
+    var listLineDiv = $(includeelementMoveId + '.list-line.point-events:not(.disabled)');
+    var liChildListLineDiv = $(includeelementMoveId + '.li-child-list-line.point-events');
+    var newLinePointer = $(includeelementMoveId + '.new-line-pointer');
+    var hiddenLi = $(includeelementMoveId + '.hidden-li');
+    var hiddenListLine = $(includeelementMoveId + '.hidden-list-line');
+    var body = $(elementMoveId);
+    var bodyBlock = false;
+    var offsetLeft = 0;
+    var offsetTop = 0;
+    var moveWidth = 0;
+    var curLiDom = null;
+    var curLiChildDom = null;
+    var curListLineDom = null;
+    var curLiChildListLineDom = null;
+    var hoverListLine = null;
+    var hoverLiChildListLine = null;
+    var hoverCreatingListLine = null;
+    var xx = 0;
+    var moving = false;// 判断是否启用事件
+    var movingLi = false;// 正在移动步骤
+    var movingLiChild = false;// 正在移动子步骤
+    var firstHolding = false;// 首次悬浮
+
+    var offsetFuc = function () {
+        offsetLeft = body.offset().left;
+        offsetTop = body.offset().top;
+    };
+
+    var removeNewLinePointerOrCreating = function () {
+        hoverCreatingListLine = null;
+        if (hoverLiChildListLine != null) {
+            hoverLiChildListLine.removeClass("border");
+            // changeLiWidth(hoverLiChildListLine.parent());
+        }
+        if (hoverListLine != null) {
+            hoverListLine.find(".new-line-pointer").removeClass("new-line-pointer-animation").removeClass("new-line-pointer-animation-shadow").removeClass("creating").unbind("mouseenter");
+        }
+    };
+
+    var initAttr = function () {
+        removeNewLinePointerOrCreating();
+        moveWidth = 0;
+        curLiDom = null;
+        curLiChildDom = null;
+        curListLineDom = null;
+        curLiChildListLineDom = null;
+        hoverListLine = null;
+        hoverLiChildListLine = null;
+        xx = 0;
+        moving = false;
+        movingLi = false;
+        movingLiChild = false;
+        firstHolding = false;
+        liDom.removeClass('no-point-events').removeClass("hover").parent().removeClass("absolute");
+        liChildDom.parent().removeClass("absolute").removeClass("hover");
+        iconSpan.parent().removeClass("hover");
+        coverDiv.fadeOut(0);
+        movingDiv.css("display", "none");
+        body.removeClass("active");
+        liDom = $(includeelementMoveId + '.ul .scroll:not(.disabled) .li');
+        liChildDom = $(includeelementMoveId + '.ul .scroll:not(.disabled) .li .li-child:not(.disabled) > .li-child-content');
+        liGlyDom = $(includeelementMoveId + '.ul .scroll:not(.disabled) .li .li-child:not(.disabled) > .li-child-content > .glyphicon');
+        iconSpan = $('.li-child-content > .glyphicon');
+        listLineDiv = $(includeelementMoveId + '.list-line.point-events:not(.disabled)');
+        liChildListLineDiv = $(includeelementMoveId + '.li-child-list-line.point-events');
+        newLinePointer = $(includeelementMoveId + '.new-line-pointer');
+    };
+
+    var mouseoverFunction = function (dom) {
+        dom.parent().addClass('hover');
+    };
+
+    var mouseoutFunction = function (dom) {
+        dom.parent().removeClass('hover');
+    };
+
+    var mouseEnterLi = function (dom, ee) {
+        if (hoverListLine != null) {
+            hoverListLine.removeClass("higher");
+        }
+        hoverListLine = $(dom).addClass("higher");
+    };
+
+    // 移动步骤的时候显示在并发里面的块
+    var mouseEnterLiChild = function (dom, ee) {
+        hoverLiChildListLine = $(dom).find(".li-child-list-line.point-events:eq(0)").addClass("border");
+    };
+
+    if (mouseType == null) {
+        mouseType = "click";
+    }
+
+    // 小图标监听事件
+    liGlyDom.bind({
+        'mousedown': function (e) {
+            console.log('进入事件');
+            e.stopPropagation();
+        }
+    });
+
+    // 步骤监听事件
+    liDom.bind({
+        "mouseenter": function (e) {
+            if (movingLiChild) {
+                removeNewLinePointerOrCreating();
+                mouseEnterLiChild(this, e);
+            }
+        }, "mouseover": function () {
+            if (moving) {
+                return;
+            }
+            mouseoverFunction($(this));
+        }, "mouseout": function () {
+            if (moving) {
+                return;
+            }
+            mouseoutFunction($(this));
+        }
+    }).bind(mouseType, function (e) {
+        if (moving || bodyBlock) {
+            return;
+        }
+        e.stopPropagation();
+        bodyBlock = true;
+        offsetFuc();
+        moving = true;
+        movingLi = true;
+        movingDiv = moveDiv;
+        //noinspection JSValidateTypes
+        movingDiv.empty().append($(this).clone()).css("display", "block");
+        curLiDom = $(this).parent().addClass("absolute");
+        coverDiv.fadeIn(0);
+        changeTop(e);
+        body.addClass("active");
+        curLiDom.siblings('.li').addClass('no-point-events');
+        hoverListLine = curLiDom.nextAll(".list-line:eq(0)").addClass("higher");
+        curListLineDom = curLiDom.prevAll(".list-line:eq(0)").removeClass('point-events');
+        listLineDiv.bind("mouseenter", function (e) {
+            if (!moving) {
+                return;
+            }
+            if (movingLi) {
+                mouseEnterLi(this, e);
+            }
+        });
+        setTimeout(function () {
+            listLineDiv.addClass("transition");
+        }, 300);
+        bodyBlock = false;
+    });
+
+    // 子步骤监听事件
+    liChildDom.bind({
+        "mouseover": function (e) {
+            if (moving) {
+                return;
+            }
+            e.stopPropagation();
+            mouseoverFunction($(this));
+        }, "mouseout": function (e) {
+            if (moving) {
+                return;
+            }
+            e.stopPropagation();
+            mouseoutFunction($(this));
+        }
+    }).bind(mouseType, function (e) {
+        if (moving || bodyBlock) {
+            return;
+        }
+        e.stopPropagation();
+        bodyBlock = true;
+        offsetFuc();
+        moving = true;
+        movingLiChild = true;
+        curLiChildDom = $(this).parent();
+        movingDiv = moveChildDiv;
+        //noinspection JSValidateTypes
+        coverDiv.fadeIn(0);
+        moveWidth = Number($(this).css("width").split("px")[0]);
+        movingDiv.css("width", moveWidth).empty().append(curLiChildDom.children().clone());
+        changeTop(e);
+        changeLeft(e);
+        movingDiv.css("display", "block");
+        body.addClass("active");
+        curLiChildDom.addClass("absolute");
+        liDom.addClass('no-point-events');
+        hoverLiChildListLine = curLiChildDom.prevAll(".li-child-list-line.point-events:eq(0)").addClass("border");
+        listLineDiv.addClass("transition").bind("mouseenter", function () {
+            removeNewLinePointerOrCreating();
+            hoverListLine = $(this);
+            hoverListLine.find(".new-line-pointer").addClass("new-line-pointer-animation").bind({
+                "mouseenter": function (e) {
+                    $(this).addClass("creating").removeClass("new-line-pointer-animation").addClass("new-line-pointer-animation-shadow");
+                    setTimeout(function () {
+                        offsetFuc();
+                    }, 150);
+                    setTimeout(function () {
+                        offsetFuc();
+                    }, 300);
+                    hoverCreatingListLine = $(this).parents('.list-line');
+                }
+            });
+        });
+        liChildListLineDiv.addClass("transition");
+        bodyBlock = false;
+    });
+
+    body.bind(mouseType == 'click' ? mouseType : "mouseup", function () {
+        if (bodyBlock) {
+            return;
+        }
+        bodyBlock = true;
+        offsetFuc();
+        listLineDiv.removeClass("transition").removeClass("higher").unbind("mouseenter");
+        // 大块事件
+        if (hoverListLine != null) {
+            if (curListLineDom != null) {
+                hoverListLine.before(curListLineDom.addClass('point-events'));
+            }
+            if (curLiDom != null) {
+                hoverListLine.before(curLiDom);
+            }
+        }
+        // 小块事件
+        if (curLiChildDom != null) {
+            liChildListLineDiv.removeClass("transition").removeClass("border");
+            var curLiChildParent = curLiChildDom.parents('.scroll');
+            if (hoverLiChildListLine != null) {
+                hoverLiChildListLine.after(curLiChildDom);
+            }
+            if (hoverCreatingListLine != null) {
+                hoverListLine.before($(hiddenListLine).clone(true).removeClass("hidden-list-line"));
+                hoverListLine.before(hiddenLi.clone(true));
+                hoverListLine.prevAll('.hidden-li:eq(0)').removeClass("hidden-li").find('.li-child-list-line').after(curLiChildDom);
+            }
+            if (curLiChildParent.find('.li-child').size() < 1 && curLiChildParent.find('.li-child').size() < 1) {
+                curLiChildParent.prevAll('.list-line:eq(0)').remove();
+                curLiChildParent.remove();
+            }
+        }
+        initAttr();
+        bodyBlock = false;
+    });
+
+    setInterval(function () {
+        offsetFuc();
+    }, 1000);
+
+    body.bind("mousemove", function (e) {
+        if (movingLiChild) {
+            changeLeft(e);
+        }
+        changeTop(e);
+    });
+
+    var changeTop = function (e) {
+        //noinspection JSValidateTypes
+        var yy = body.scrollTop() + e.pageY - offsetTop;
+        movingDiv.css("top", yy - movingDiv.height() / 2);
+    };
+
+    var changeLeft = function (e) {
+        //noinspection JSValidateTypes
+        xx = body.scrollLeft() + e.pageX - offsetLeft;
+        movingDiv.css("left", xx - movingDiv.width() / 2);
+    };
+}

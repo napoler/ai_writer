@@ -1,0 +1,17 @@
+beautifulsoup4==4.7.1
+bs4==0.0.1
+cchardet==2.1.4
+certifi==2019.3.9
+chardet==3.0.4
+decorator==4.4.0
+idna==2.8
+jieba==0.39
+MagicBaidu==0.0.9
+networkx==2.3
+numpy==1.16.4
+pkg-resources==0.0.0
+requests==2.21.0
+soupsieve==1.9.1
+Terry-toolkit==0.0.1.6.2.8.4
+textrank4zh==0.3
+urllib3==1.24.3

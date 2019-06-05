@@ -2,12 +2,14 @@ from cacheout import Cache
 cache = Cache()
 
 from flask import Flask, render_template, request, json, Response, jsonify
-import gc
+import gc,time
 from sys import getrefcount
 import resource
 from functools import partial
-
- 
+import libs
+#同义词
+import synonyms
+import bert_run
 #import multiprocessing as mp
 from bert_sample import SentencePrediction,MaskedLM
 import Terry_toolkit as tkit
@@ -42,6 +44,257 @@ def home():
     print(config.get('site', 'name'))
     return render_template("index.html")
 
+@app.route("/json/nlp", methods=['GET', 'POST'])
+def json_nlp():
+    text = request.args.get('text')
+    print('text:',text)
+
+    key ='page_nlp'+str(text)
+    if cache.get(key) is None:
+        print('创建新缓存')
+
+        tnlp = libs.Nlp()
+        keywords = tnlp.dnn(text=text)
+        cache.set(key ,keywords)
+    else:
+        print('获取缓存')
+        keywords = cache.get(key)
+    print('dnn:',keywords)
+    return jsonify(keywords)
+@app.route("/json/calculate_keyword", methods=['GET', 'POST'])
+# 获取关键词
+def json_calculate_keyword():
+    text = request.args.get('text')
+    cache_key ='json_calculate_keyword'+str(text)
+    if cache.get(cache_key) is None:
+        # 抽取名称和形容词
+        # synonyms
+        kws,s = synonyms.seg(text)
+        # kws =tkit.Text().get_keywords(text,num=3)
+        l = {'n','nz','ns','nr'}
+        # kws_new = []
+        keyword =''
+        for key,item in enumerate(s):
+            print(key)
+            print(item)
+
+            print(kws[key])
+            if item in l:
+                keyword = keyword+" "+kws[key]
+        data = keyword
+
+        cache.set(cache_key ,data)
+    else:
+        print('获取缓存')
+        data = cache.get(cache_key)
+    # print('dnn:',data)
+    return jsonify(data)        
+
+@app.route("/json/calculate", methods=['GET', 'POST'])
+# 预测下一句
+def json_calculate():
+    text = request.args.get('text')
+    print('text:',text)
+    if request.args.get('keyword'):
+
+        keyword = request.args.get('keyword')
+    else:
+
+        # 抽取名称和形容词
+        # synonyms
+        kws,s = synonyms.seg(text)
+        # kws =tkit.Text().get_keywords(text,num=3)
+        l = {'n','nz','ns','nr'}
+        # kws_new = []
+        keyword =''
+        for key,item in enumerate(s):
+            print(key)
+            print(item)
+
+            print(kws[key])
+            if item in l:
+                keyword = keyword+" "+kws[key]
+            
+
+
+        
+        # print(kws)
+        # print(s)
+        # keyword = ''
+
+        # for k in kws:
+        #     keyword = keyword+ " "+k['word']
+        
+        # keyword = ' '.join(kws)
+    print(keyword)
+
+    cache_key ='json_calculate'+str(text)+str(keyword)
+    if cache.get(cache_key) is None:
+        print('创建新缓存')
+
+        # tnlp = libs.Nlp()
+        # keywords = tnlp.dnn(text=text)
+        # items,items_rank = synonyms.nearby(text)
+        items= libs.TerrySearch().search(text=keyword,limit= int(3))
+        # nextS=SentencePrediction()
+        mod= config.get('bert', 'model')
+        # nextS.model_init(model=mod)
+        nexts = []
+        next_lines=[]
+        contents=[]
+        for item in items:
+            # print(item['data'])
+            article = tkit.Text().text_processing(item['data']['content'],5)
+
+            # items.append(text)
+            # nextS.model_init()
+    
+            
+            # article ={
+            #     'calculate':next_line,
+            #     'content':item
+            # }
+
+            nexts.append(article)
+            # contents.append(item['data']['content'])
+            contents.append(item['data'])
+
+        pdata = {
+            'content':contents,
+            'text':text
+        }
+        tmpname = str(time.time())
+        output ='/tmp/output_'+tmpname+'.json'
+        inputfile ='/tmp/input_'+tmpname+'.json'
+        bert_run.c_inputfile(inputfile,pdata)
+        try:
+            # next_line=nextS.sentence(item['data']['content'],text)
+
+
+            # if bert_run.c_inputfile(inputfile,pdata):
+            print('开始后台执行')
+            cmd ="python3 bert_run.py --model "+mod+" --do Sentence_Pre --output "+output+ " --input "+inputfile
+            next_lines = bert_run.run_cmd(cmd,inputfile,output)
+
+            # article['calculate'] = next_line
+            # next_lines = next_lines+next_line
+            # else:
+            #     print('创建训练文件出错')
+        except:
+            # next_line=[]
+            print("运行预测失败")
+            pass
+            #排序所有句子
+        full_next_line=[]
+        for  next_line in next_lines:
+            full_next_line =full_next_line +next_line
+        # full_next_line=list(set(full_next_line))
+        news_ids = []
+        for id in full_next_line:
+            if id not in news_ids:
+                news_ids.append(id)
+        next_lines = sorted(news_ids, key=lambda k: k['next_line_prediction'],reverse=True)
+        next_lines_top= next_lines[0:9]
+        data = {
+            'next_lines_top':next_lines_top,
+            'article':nexts,
+            'text':text,
+            'keyword':keyword
+        }
+
+        cache.set(cache_key ,data)
+    else:
+        print('获取缓存')
+        data = cache.get(cache_key)
+    # print('dnn:',data)
+    return jsonify(data)
+# 获取相关词
+@app.route("/json/synonyms", methods=['GET', 'POST'])
+def json_synonyms():
+    text = request.args.get('text')
+    print('text:',text)
+
+    key ='json_synonyms'+str(text)
+    if cache.get(key) is None:
+        print('创建新缓存')
+
+        # tnlp = libs.Nlp()
+        # keywords = tnlp.dnn(text=text)
+        items,items_rank = synonyms.nearby(text)
+        cache.set(key ,items)
+    else:
+        print('获取缓存')
+        items = cache.get(key)
+    print('dnn:',items)
+    return jsonify(items)
+
+# 伪原创语句
+@app.route("/json/rewrit/statement", methods=['GET', 'POST'])
+def json_rewrit_statement():
+    text = request.args.get('text')
+    print('text:',text)
+
+    key ='json_rewrit_statement'+str(text)
+    if cache.get(key) is None:
+        print('创建新缓存')
+
+        # tnlp = libs.Nlp()
+        # keywords = tnlp.dnn(text=text)
+        rs = libs.RewritStatement()
+        # text ="python中for循环输出列表索引与对应的值 - tanlangqie的博客"
+        t = rs.text(text)
+        rnk = synonyms.compare(text, t, seg=True)
+        items = {
+            'text':text,
+            'new_text':t,
+            'relevant':rnk
+        }
+        # print(t)
+        cache.set(key ,items)
+    else:
+        print('获取缓存')
+        items = cache.get(key)
+    print('json_rewrit_statement',items)
+    return jsonify(items)
+
+
+@app.route("/json/search" ,methods=['GET', 'POST'])
+def json_search():
+    """返回搜索json结果
+    """
+    text = request.args.get('text')
+    limit = request.args.get('limit')
+    print(limit)
+    r= libs.TerrySearch().search(text=text,limit= int(limit))
+    # print(data)
+    # data={'data':r,
+    #     'msg':'返回数据'
+    # }
+    # data 
+    return jsonify(r)
+
+@app.route("/json/search_pre" ,methods=['GET', 'POST'])
+def json_search_pre():
+    """返回搜索json结果 并且进行预处理
+    """
+    text = request.args.get('text')
+    limit = request.args.get('limit')
+    print(limit)
+    r= libs.TerrySearch().search(text=text,limit= int(limit))
+    items = []
+    for item in r:
+        item['data']['content']
+        print(item['data']['content'])
+        # tkit.Text().get_keyphrases(item['data']['content'], num=10)
+        text = tkit.Text().text_processing(item['data']['content'])
+        items.append(text)
+
+    # print(data)
+    # data={'data':r,
+    #     'msg':'返回数据'
+    # }
+    # data 
+    return jsonify(items)
 
 # 编辑器页面
 @app.route("/p/edit")
@@ -63,9 +316,6 @@ def page_edit():
     print(content)
     return render_template("edit_v1.html",**locals())
 @app.route("/tools/sentence/prediction")
-
-
-
 def tools_sentence_prediction():
     return render_template("tools_sentence_prediction.html",**locals())
 
@@ -99,8 +349,6 @@ def json_sentence_prediction():
         data['msg']='返回预测结果'
     else:
         data={'msg':'数据不完整'}
-
-
     return jsonify(data)
     # return "Hello World!"
 

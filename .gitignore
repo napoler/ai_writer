@@ -10,6 +10,8 @@ __pycache__/
 data/
 cache/
 indexdir/
+#libs/nlp.py
+config.ini
 
 # Distribution / packaging
 .Python

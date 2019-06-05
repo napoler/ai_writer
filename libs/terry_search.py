@@ -5,7 +5,7 @@ from whoosh.qparser import QueryParser
 from whoosh.index import open_dir
 import jieba
 from jieba.analyse import ChineseAnalyzer
-
+from tqdm import tqdm
 
 # from Terry_toolkit import File
 import Terry_toolkit
@@ -13,7 +13,7 @@ class TerrySearch:
     """本地构建搜索
     """
     def __init__(self):
-        """开始初 始化搜索
+        """开始初始化搜索
         """
         pass
     def init_search(self):
@@ -37,8 +37,9 @@ class TerrySearch:
         writer = idx.writer()
 
         #https://terry-toolkit.terrychan.org/zh/master/Terry_toolkit.file/#Terry_toolkit.file.File.file_List
-        for item in Terry_toolkit.File().file_List(path=path, type='txt'):
-            print('item:  '+item)
+        i =0
+        for item in tqdm(Terry_toolkit.File().file_List(path=path, type='txt')):
+            # print('item:  '+item)
             text = Terry_toolkit.File().open_file(item)
             # seg_list = jieba.cut_for_search(text)  # 搜索引擎模式
             # # print(", ".join(seg_list))
@@ -47,17 +48,24 @@ class TerrySearch:
             # print("标题:"+text[0:30])
             writer.add_document(title=text[0:30] , path=item,
                                 content=text)
+            if i%1000 == 0:
+                #每1000次提交一次
+                writer.commit()
+                writer = idx.writer()
+                
+            i =i +1
+
             
         writer.commit()
         pass
-    def search(self,text=''):
+    def search(self,text='',limit=10):
         """搜索内容 自动分词
         >>> search(text)
         """
         seg_list = jieba.cut_for_search(text)  # 搜索引擎模式
         # print(", ".join(seg_list))
         text=" ".join(seg_list)
-        results =  self.search_keyword(text)
+        results =  self.search_keyword(keyword= text,limit=limit)
 
         # print(results[0])
         # for i in range(0,len(results)):
@@ -67,12 +75,13 @@ class TerrySearch:
         #     items.append(results[i])
         # return items
 
-        print(results)
+        # print(results)
+        return results
         # print(results[0])
    
  
 
-    def search_keyword(self,keyword=''):
+    def search_keyword(self,keyword='',limit=10):
         """搜索内容
         >>> search(keyword)
         """
@@ -85,7 +94,7 @@ class TerrySearch:
             query = QueryParser("content", idx.schema).parse(keyword)
             try:
                 
-                results = searcher.search(query,limit=None)
+                results = searcher.search(query,limit=limit)
                 # print(results)
                 # return results
             except:
@@ -95,9 +104,9 @@ class TerrySearch:
             #     print(item.Hit['title'])  
             for hit in results:
                 # 着重显示
-                print(hit.highlights("content"))
+                # print(hit.highlights("content"))
                 # print(hit.highlights("title"))
-                print(dict(hit))
+                # print(dict(hit))
                 data = {
                     'data':dict(hit),
                     'highlights':hit.highlights("content")

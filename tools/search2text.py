@@ -1,8 +1,10 @@
 # from libs import TerrySearch
-# from libs import TerrySearch
 import libs
 import fun
 import tqbm
+ARTICLE_PATH ="./data/wikitext/"
+# PATH ="/media/terry/65F33762C14D581B/tdata/wiki_zh/"
+
 #开始运行
 # libs.TerrySearch().start(path='/home/terry/pan/github/terry_search_web/terry_search_web/data/article/')
 # libs.TerrySearch().init_search()
@@ -16,7 +18,13 @@ text ="犬"
 # # print(", ".join(seg_list))
 # text=" ".join(seg_list)
 r= libs.TerrySearch().search(text=text,limit=10)
-print(len(r))
+# print(len(r))
+to =ARTICLE_PATH
+for item in r:
+    print(item['data']['path'])
+    copyfile(item['data']['path'], to)
+
+
 
 # from whoosh.index import create_in
 # from whoosh.fields import *

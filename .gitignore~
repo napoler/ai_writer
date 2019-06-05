@@ -9,6 +9,8 @@ __pycache__/
 # 屏蔽数据文件
 data/
 cache/
+indexdir/
+libs/nlp.py
 
 # Distribution / packaging
 .Python

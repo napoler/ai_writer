@@ -11,7 +11,8 @@ data/
 cache/
 indexdir/
 config/
-
+*.py~
+*.txt~
 #libs/nlp.py
 config.ini
 

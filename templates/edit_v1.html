@@ -396,7 +396,8 @@
 
       // #slist
       $(document).on('click', '#search-button', function () {
-        $("#slist").prepend('<div class="ui active loader"></div>')
+       
+        $("#slist_msg").html('加载中...')
 
 
         var keyword = $('#search-input').val();
@@ -411,6 +412,7 @@
           function (data) {
             // ...
             console.log('搜索结果：', data)
+            $("#slist_msg").html('搜索完成')
             var textLong = ''
             $.each(data, function (key, value) {
 
@@ -432,20 +434,20 @@
 
 
       // 聚焦语句编辑器时候执行
-      $(document).on('focus', '.editing_juzi_edit', function () {
+      // $(document).on('focus', '.editing_juzi_edit', function () {
 
-        console.log('开始编辑语句')
-        $(this).addClass("bor");
+      //   console.log('开始编辑语句')
+      //   $(this).addClass("bor");
 
-      });
+      // });
 
-      $(document).on('blur', '.editing_juzi_edit', function () {
-        // 停止编辑
-        $(this).removeClass("bor");
-        text = $(this).val();
-        nlp(text)
+      // $(document).on('blur', '.editing_juzi_edit', function () {
+      //   // 停止编辑
+      //   $(this).removeClass("bor");
+      //   text = $(this).val();
+      //   nlp(text)
 
-      });
+      // });
       // 失去焦点时候执行
       // $(document).on('blur', '.edit_box_textarea', function () {
 
@@ -664,15 +666,20 @@
       $(document).on('click', '#totext', function () {
         $('#content-review .content').empty();
 
-        $('#content-review .content').append('<ol></ol>');
+        // $('#content-review .content').append('<ol></ol>');
         $('#edit-list li').each(function () {
           // doSomethingWith($(this).text());
           // 依次对每个 div 执行 doSomethingWith()，
           // 将当前 DIV 中的文本作为参数
           var text = $(this).text();
           console.log(text);
-          $('#content-review .content ol').append('<li>' + text + '。</li>');
+          
+       
+          $('#content-review .content').append('<span >' + text + '。</span>');
         });
+        var t =$('#content-review .content').text();
+        l = t.length;
+        $('#totext_len').text(l)
 
 
       });
@@ -699,14 +706,25 @@ function get_calculate_keyword (text){
             // })
 
             $("#calculate_keyword").val(data)
-    
-
-
-          })
+   })
 
 
 
 }
+
+
+
+$(document).on('click', '#editing_juzi_edit_ppl .gm', function () {
+
+  var text  = $(this).text();
+  var calculate_keyword = $('#calculate_keyword').val();
+
+  calculate_keyword = calculate_keyword + ' '+ text;
+  $('#calculate_keyword').val(calculate_keyword);
+
+})
+
+
 
       // 点击切换开启编辑dblclick
       $(document).on('click', '#edit-list li', function () {
@@ -718,7 +736,8 @@ function get_calculate_keyword (text){
           // var  t_juzi_text = $('#editing_juzi').text();
           var t_juzi_text = $('#editing_juzi_edit').val();
 
-          $('#' + t_juzi).text(t_juzi_text);
+          $('#' + t_juzi).text(t_juzi_text).removeClass('editing').addClass('edited');
+   
 
         }
         $('#calculate_keyword').val("");
@@ -726,6 +745,7 @@ function get_calculate_keyword (text){
 
 
         var state = $(this).data('state');
+
         switch (state) {
           case 1:
           case undefined:
@@ -737,11 +757,15 @@ function get_calculate_keyword (text){
               $('#t_juzi').val(id);
               var text = $(this).text();
               $("#editing_juzi_edit").val(text)
+
               // 获取预测关键词
               get_calculate_keyword(text)
+
+
               nlp(text)
              
-             
+               // 自动执行预测下一句
+              get_next_search(text)
              break;
 
 
@@ -749,7 +773,7 @@ function get_calculate_keyword (text){
 
           case 2: 
 
-          $(this).removeClass('editing');
+           $(this).removeClass('editing').addClass('edited');
            $(this).data('state', 1); 
            $('#t_juzi').val('')
            break;
@@ -857,23 +881,23 @@ function nlp(text){
 
 
             });
-            pplClass = 'ppl_0'
-            if (data.ppl > 1000) {
-              pplClass = 'ppl_2'
-            } else if (data.ppl > 500) {
-              pplClass = 'ppl_1'
+            // pplClass = 'ppl_0'
+            // if (data.ppl > 1000) {
+            //   pplClass = 'ppl_2'
+            // } else if (data.ppl > 500) {
+            //   pplClass = 'ppl_1'
 
-            }
+            // }
 
-            $('#id-' + uuid + ' .edit_box_form').append(
-              '<div class="column">' +
-              'ppl评分:' + data.ppl +
-              '<div class="ppl ' + pplClass + '">' +
-              textLong +
-              "</div>" + "</div>"
+            // $('#id-' + uuid + ' .edit_box_form').append(
+            //   '<div class="column">' +
+            //   'ppl评分:' + data.ppl +
+            //   '<div class="ppl ' + pplClass + '">' +
+            //   textLong +
+            //   "</div>" + "</div>"
 
-            );
-
+            // );
+            $('#editing_juzi_edit_ppl_value .value').html(data.ppl)
             $('#editing_juzi_edit_ppl').html(textLong);
 
             
@@ -893,29 +917,36 @@ function nlp(text){
 
       // 单击单词
       // 进入单词编辑
-      $(document).on('click', '.word', function () {
+      // $(document).on('click', '.word', function () {
+      //   // #移除之前的状态
+      //   $('.word').removeClass("red")
+
+      //   var state = $(this).data('state');
+      //   switch (state) {
+      //     case 1:
+      //     case undefined: $(this).addClass('red'); $(this).data('state', 2); break;
+      //     case 2: $(this).removeClass('red'); $(this).data('state', 1); break;
+      //   }
+      //   var id = $(this).attr('id');
+      //   var word = $(this).text();
+
+      //   $('#wordid').val(id);
+      //   $('#word_text').val(word);
+
+
+
+
+
+      // });
+
+    $(document).on('click', '#nlp', function () {
+      // 测试预测
         // #移除之前的状态
-        $('.word').removeClass("red")
-
-        var state = $(this).data('state');
-        switch (state) {
-          case 1:
-          case undefined: $(this).addClass('red'); $(this).data('state', 2); break;
-          case 2: $(this).removeClass('red'); $(this).data('state', 1); break;
-        }
-        var id = $(this).attr('id');
-        var word = $(this).text();
-
-        $('#wordid').val(id);
-        $('#word_text').val(word);
-
-
-
-
+        var text = $('#editing_juzi_edit').val()
+        nlp(text)
+ 
 
       });
-
-
 
       // 添加新语句
       $(document).on('click', '#add_juzi_edit_btn', function () {
@@ -938,45 +969,45 @@ function nlp(text){
         $('#' + id).text(text);
       });
 
-      //添加到之前
-      $(document).on('click', '#addpre', function () {
-        // #移除之前的状态
-        var id = $('#wordid').val()
-        var text = $('#word_text').val()
-        timestamp = new Date().getTime()
-        $('#' + id).before('<li id="word' + timestamp + '" class="ui mini button word">' + text + '</li>');
+      // //添加到之前
+      // $(document).on('click', '#addpre', function () {
+      //   // #移除之前的状态
+      //   var id = $('#wordid').val()
+      //   var text = $('#word_text').val()
+      //   timestamp = new Date().getTime()
+      //   $('#' + id).before('<li id="word' + timestamp + '" class="ui mini button word">' + text + '</li>');
 
-      });
-      // 添加到之后
-      $(document).on('click', '#addnext', function () {
-        // #移除之前的状态
-        var id = $('#wordid').val()
-        var text = $('#word_text').val()
-        timestamp = new Date().getTime()
-        $('#' + id).after('<li id="word' + timestamp + '" class="ui mini button word">' + text + '</li>');
+      // });
+      // // 添加到之后
+      // $(document).on('click', '#addnext', function () {
+      //   // #移除之前的状态
+      //   var id = $('#wordid').val()
+      //   var text = $('#word_text').val()
+      //   timestamp = new Date().getTime()
+      //   $('#' + id).after('<li id="word' + timestamp + '" class="ui mini button word">' + text + '</li>');
 
-      });
-
-
-      // 删除当前元素
-      $(document).on('click', '#remove', function () {
-        // #移除之前的状态
-        var id = $('#wordid').val()
-        var text = $('#word_text').val()
-        timestamp = new Date().getTime()
+      // });
 
 
-        var next_id = $('#' + id).next().attr('id');
-        // 默认选择下一个单词
-        var word = $('#' + next_id).text();
-        $('#wordid').val(next_id);
-        $('#word_text').val(word);
-        $('#' + next_id).addClass("red")
+      // // 删除当前元素
+      // $(document).on('click', '#remove', function () {
+      //   // #移除之前的状态
+      //   var id = $('#wordid').val()
+      //   var text = $('#word_text').val()
+      //   timestamp = new Date().getTime()
 
 
-        $('#' + id).remove();
+      //   var next_id = $('#' + id).next().attr('id');
+      //   // 默认选择下一个单词
+      //   var word = $('#' + next_id).text();
+      //   $('#wordid').val(next_id);
+      //   $('#word_text').val(word);
+      //   $('#' + next_id).addClass("red")
 
-      });
+
+      //   $('#' + id).remove();
+
+      // });
 
 
       // 删除当前语句
@@ -1073,9 +1104,23 @@ function nlp(text){
 
 
     });
+    
+    $(document).on('click', '#editing_juzi_edit_ppl .gm', function () {
 
+      var k = $(this).text();
+      console.log(k)
+      var calculate_keyword = $('#calculate_keyword').val();
+      var new_calculate_keyword = calculate_keyword +" "+k 
+      console.log(calculate_keyword)
+      $('#calculate_keyword').val(new_calculate_keyword);
+
+
+
+
+    })
     // 预测下一句
     $(document).on('click', '#next', function () {
+      
       // #移除之前的状态
       // var id= $('#wordid').val()
       // var text= $('#word_text').val()
@@ -1083,12 +1128,12 @@ function nlp(text){
       // timestamp=new Date().getTime()
       // var text2 = $('#editing_juzi').text();
       var text2 = $('#editing_juzi_edit').val();
-
+      
       // var pre_text_id = $('#t_juzi').val();
       // var text1 = $('#'+pre_text_id).prev().text();
       var calculate_keyword = $('#calculate_keyword').val();
       get_next_search(text2, calculate_keyword)
-      $("#calculate_list").html('<div class="ui active loader"></div>')
+ 
 
     });
 
@@ -1096,6 +1141,7 @@ function nlp(text){
 
     // 预测下一句的搜索
     function get_next_search(text, calculate_keyword) {
+      $("#calculate_list_msg").html('预测中...')
       $.get(
         "/json/calculate",
         {
@@ -1106,7 +1152,9 @@ function nlp(text){
         function (data) {
           // ...
           console.log('搜索结果：', data)
-          $("#calculate_keyword").val(data.keyword)
+          $("#calculate_list_msg").html(data.msg)
+          
+          // $("#calculate_keyword").val(data.keyword)
           // var textLong = ''
           calculate_items(data.next_lines_top)
 
@@ -1140,6 +1188,7 @@ function nlp(text){
         textLong = '<div class ="article" data-md5 ="'+data.md5+'" >' + ''
 
         textLong = textLong + ' <div class="keywords">';
+        var keywords = $("#search-tags").text();
         for (var item in data.keywords) {
           // console.log("summarys." + item +value.keyphrases[item]['sentence']);
           // console.log("summarys." + item + value.keywords[item]['word']);
@@ -1148,14 +1197,22 @@ function nlp(text){
             //  +'</div><button class="ui button use">'
             //   +'  使用</button></li>'
             + '  ,</span>'
+            keywords = keywords +','+ data.keywords[item]['word']
 
         }
+        $("#search-tags").html(keywords);
         textLong = textLong + ' </div>';
 
+
+        var keyphrases = $("#search-keyphrases").text();
         for (var item in data.keyphrases) {
           console.log("obj." + item + data.keyphrases[item]);
-          textLong = textLong + "关键短语." + item
+          textLong = textLong + ','+data.keyphrases[item]
+          keyphrases = keyphrases+','+data.keyphrases[item]
         }
+
+
+        $("#search-keyphrases").html(keyphrases);
 
 
 
@@ -1256,13 +1313,17 @@ $('#yw-modal .article .sentence'+line).addClass('find');
     })
 
     function calculate_items(items) {
+      var otext=$("#editing_juzi_edit").val();
       // 创建预测列表 #calculate_list
       var textLong = '<ol class ="serialization">'
       $.each(items, function (key, value) {
-
+        var next_sentence_class =''
+        if(value['line_to_check'] ==otext){
+          next_sentence_class='original'
+        }
         // console.log(key + ": " + value['url']);
         console.log(value);
-        textLong = textLong + '<li>预测指数:' + value['next_line_prediction'] + ' <button data-line="'+value['line_number']+'" data-md5="'+value['original_text_md5']+'" class="ui button show-yw">原文</button></br>  <span class="next_sentence">' + value['line_to_check'] + '</span></li>'
+        textLong = textLong + '<li>预测指数:' + value['next_line_prediction'] + ' <button data-line="'+value['line_number']+'" data-md5="'+value['original_text_md5']+'" class="ui button show-yw">原文</button></br>  <span class="next_sentence '+next_sentence_class+'">' + value['line_to_check'] + '</span></li>'
 
 
       },
@@ -1473,7 +1534,9 @@ $('#yw-modal .article .sentence'+line).addClass('find');
     .content {
       padding: 10px;
     }
-
+    span.next_sentence.original {
+    background: #e44e4e;
+}
     .edit_box_textarea {
       height: 6em !important;
       min-height: 2em !important;
@@ -1542,7 +1605,9 @@ $('#yw-modal .article .sentence'+line).addClass('find');
     .editing {
       background: #f5814e;
     }
-
+    div#calculate_list {
+    min-height: 100px;
+}
     ol#edit-list {
       height: 600px;
       background: #f1efef;
@@ -1566,8 +1631,8 @@ $('#yw-modal .article .sentence'+line).addClass('find');
 
     .placeholder {
       display: inline-block;
-      width: 40px;
-      background: #21ba45;
+      width: 100%;
+      background: #21ba45 !important;
     }
 
     .keywords {
@@ -1593,6 +1658,9 @@ $('#yw-modal .article .sentence'+line).addClass('find');
     }
     .pre_line {
     font-size: 1.5em;
+}
+.edited{
+  border-bottom: 2px solid #f2711c !important;
 }
     .dragged {
       position: absolute;
@@ -1621,7 +1689,7 @@ $('#yw-modal .article .sentence'+line).addClass('find');
 
   <div class="ui fixed inverted menu">
     <div class="ui container">
-      <a href="fixed.php#" class="header item">
+      <a href="/" class="header item">
 
         写作助手
       </a>
@@ -1637,7 +1705,22 @@ $('#yw-modal .article .sentence'+line).addClass('find');
   <div class="ui two column stackable grid">
 
     <div class="ten wide column">
+   
       <div class="content">
+
+   <!-- 搜索盒子 -->
+   <div id = 'search-box' class="ui form">
+ 
+      <div class="ui action input">
+        <!-- <label>搜索资料</label> -->
+        <input id="search-input" type="text" placeholder="搜索...">
+        <button id="search-button" class="ui button">搜索</button>
+
+      
+      </div>
+    </div>
+     <!-- 搜索盒子 -->
+
         <div class="ui segment">
          
           <ol id='edit-list' class='serialization vertical'>
@@ -1710,6 +1793,38 @@ $('#yw-modal .article .sentence'+line).addClass('find');
       </div>
 
 
+
+
+      <!-- 获取数据 -->
+      <div class="ui segment">
+          <h3 id="slist_msg"></h3>
+          <div id="slist" class="column ui segment">
+    
+          </div>
+     
+        </div>
+
+      <!-- end获取数据 -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </div>
     <div class="six wide column">
 
@@ -1742,10 +1857,19 @@ $('#yw-modal .article .sentence'+line).addClass('find');
               等级5<span class='gm5 gm'></span></p>
           <textarea id="editing_juzi_edit" rows="3" cols="20">
             </textarea>
-
+          </div>
+ 
+            <div id="editing_juzi_edit_ppl_value" class="">
+                <div class="label">
+                    PPL(越低越流畅 建议小于500)
+                  </div>
+                    <div class="value">
+                      0
+                    </div>
+               </div>
         
         <div id="editing_juzi_edit_ppl"></div>
-        </div>
+     
         <!-- <ul class="ui inverted segment" id="editing_juzi">
 
 
@@ -1770,6 +1894,7 @@ $('#yw-modal .article .sentence'+line).addClass('find');
             <button id='addpre' class="ui orange button">添加到前面</button>
             <button id='addnext' class="ui yellow button">添加到之后</button>
             <button id='remove' class="ui olive button">删除</button> -->
+            <button id='nlp' class="ui green button">nlp</button>
             <button id='mask' class="ui green button">预测</button>
             <button id='gaicuo' class="ui green button">改错</button>
             <button id='del_s' class="ui green button">删除这句</button>
@@ -1778,59 +1903,64 @@ $('#yw-modal .article .sentence'+line).addClass('find');
               <input id="calculate_keyword" type="text" name="calculate_keyword" placeholder="下一句关键词">
             </div>
             <button id='next' class="ui green button">猜下一句</button>
+            
 
 
           </div>
+        </div>
           <!-- 这里是预测结果的地方 -->
-          <h3>预测下一句为</h3>
+          <!-- <h3>预测下一句为</h3> -->
+    
+        
+            <h3 id="calculate_list_msg" class="ui segment"></h3>  
+        
+       
           <div id="calculate_list" class="ui segment">
 
 
           </div>
 
+          <div id="search-tags" class="ui segment column">
+    
+            
+            </div>
+            <div id="search-keyphrases" class="ui segment column">
+    
+      
+              </div>
 
+          <!-- 获取text -->
+          <div id="target">
+
+              <button id="totext" class="ui button">
+                获取text
+              </button>
+              <span id = "totext_lab">字数:</span>
+              <span id = "totext_len"></span>
+            </div>
+         
+    
+          <div id="content-review" class="ui segment column">
+    
+            <div class="content">
+    
+    
+            </div>
+          </div>
+      
+      
+       
+       
+       
+       
+       
         </div>
 
-      </div>
+   
 
       <!-- 句子编辑结束 -->
 
-
-
-
-
-
-      <div id="target">
-
-          <button id="totext" class="ui button">
-            获取text
-          </button>
-        </div>
-  
-
-
-      <div id="content-review" class="ui segment column">
-
-        <div class="content">
-
-
-        </div>
-      </div>
-      <!-- <h2>垃圾箱</h2>
-      <div
-        class="ui segment middle aligned divided list list-group-sortable-connected ui one column doubling stackable grid"
-        id="del-list">
-
-
-
-
-
-      </div> -->
-
-
-
-
-
+ 
 
     </div>
   </div>
@@ -1841,26 +1971,6 @@ $('#yw-modal .article .sentence'+line).addClass('find');
 
 
 
-
-    <div class="ui segment">
-
-      <h2>获取数据</h2>
-      <div class="ui action input">
-        <input id="search-input" type="text" placeholder="搜索...">
-        <button id="search-button" class="ui button">搜索</button>
-
-      
-      </div>
-
-      <div id="slist" class="column ui segment">
-
-      </div>
-
- 
-
-
-   
-    </div>
 
 
 

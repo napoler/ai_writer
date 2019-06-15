@@ -1,10 +1,11 @@
 # from libs import TerrySearch
 import libs
+
 #开始运行
 #新的搜索
 # libs.TerrySearch().init_search()
 #libs.TerrySearch().start(path='/home/terry/pan/github/terry_search_web/terry_search_web/data/article/')
-libs.TerrySearch().start(path='/home/terry/pan/github/terry_search_web/terry_search_web/data/article/')
+libs.TerrySearch().start(path='/home/terry/pan/github/bert/data/text/news2016zh/1559850465.8304443')
 #搜索
 
 # import jieba

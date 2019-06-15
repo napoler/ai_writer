@@ -4,8 +4,8 @@ import libs
 #开始运行
 #新的搜索
 # libs.TerrySearch().init_search()
-#libs.TerrySearch().start(path='/home/terry/pan/github/terry_search_web/terry_search_web/data/article/')
-libs.TerrySearch().start(path='/home/terry/pan/github/terry_search_web/terry_search_web/data/wiki/')
+#索引目录
+libs.TerrySearch().start(path='/home/terry/pan/github/ai_writer/ai_writer/data/kw2text/')
 #搜索
 
 # import jieba

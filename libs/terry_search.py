@@ -6,7 +6,9 @@ from whoosh.index import open_dir
 import jieba
 from jieba.analyse import ChineseAnalyzer
 from tqdm import tqdm
-
+# indexname
+# INDEXNAME='TerrySearch'
+INDEXNAME='TerrySearch_pet'
 # from Terry_toolkit import File
 import Terry_toolkit
 class TerrySearch:
@@ -23,7 +25,7 @@ class TerrySearch:
         analyzer = ChineseAnalyzer()
         schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT(stored=True, analyzer=analyzer))
         # ix = create_in("indexdir", schema)
-        idx = create_in("indexdir", schema=schema, indexname='TerrySearch') #path 为索引创建的地址，indexname为索引名称  
+        idx = create_in("indexdir", schema=schema, indexname=INDEXNAME) #path 为索引创建的地址，indexname为索引名称  
 
     def start(self,path=''):
         """开始执行搜索
@@ -33,25 +35,33 @@ class TerrySearch:
         # ix = create_in("indexdir", schema)
 
         #打开搜索
-        idx = open_dir("indexdir", indexname='TerrySearch')  #读取建立好的索引  
+        idx = open_dir("indexdir", indexname=INDEXNAME)  #读取建立好的索引  
         writer = idx.writer()
 
         #https://terry-toolkit.terrychan.org/zh/master/Terry_toolkit.file/#Terry_toolkit.file.File.file_List
         i =0
-        for item in tqdm(Terry_toolkit.File().file_List(path=path, type='txt')):
+        flist= Terry_toolkit.File().file_List(path=path, type='txt')
+        print('文件数目')
+        print(len(flist))
+        for item in tqdm(flist):
             # print('item:  '+item)
-            text = Terry_toolkit.File().open_file(item)
-            # seg_list = jieba.cut_for_search(text)  # 搜索引擎模式
-            # # print(", ".join(seg_list))
-            # text_fenci=" ".join(seg_list)
-            # print(text_fenci)
-            # print("标题:"+text[0:30])
-            writer.add_document(title=text[0:30] , path=item,
-                                content=text)
-            if i%1000 == 0:
-                #每1000次提交一次
-                writer.commit()
-                writer = idx.writer()
+            try:
+                text = Terry_toolkit.File().open_file(item)
+
+                
+                # seg_list = jieba.cut_for_search(text)  # 搜索引擎模式
+                # # print(", ".join(seg_list))
+                # text_fenci=" ".join(seg_list)
+                # print(text_fenci)
+                # print("标题:"+text[0:30])
+                writer.add_document(title=text[0:30] , path=item,
+                                    content=text)
+                if i%10000 == 0:
+                    #每10000次提交一次
+                    writer.commit()
+                    writer = idx.writer()
+            except:
+                pass
                 
             i =i +1
 
@@ -86,7 +96,7 @@ class TerrySearch:
         >>> search(keyword)
         """
         #打开搜索
-        idx = open_dir("indexdir", indexname='TerrySearch')  #读取建立好的索引  
+        idx = open_dir("indexdir", indexname=INDEXNAME)  #读取建立好的索引  
         # writer = idx.writer()
         with idx.searcher() as searcher:
             print('搜索关键词:'+keyword)

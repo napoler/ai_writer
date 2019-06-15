@@ -1,6 +1,6 @@
 from cacheout import Cache
 cache = Cache()
-
+import torch
 from flask import Flask, render_template, request, json, Response, jsonify
 import gc,time
 from sys import getrefcount
@@ -69,26 +69,43 @@ def json_calculate_keyword():
     if cache.get(cache_key) is None:
         # 抽取名称和形容词
         # synonyms
-        kws,s = synonyms.seg(text)
-        # kws =tkit.Text().get_keywords(text,num=3)
-        l = {'n','nz','ns','nr'}
-        # kws_new = []
-        keyword =''
-        for key,item in enumerate(s):
-            print(key)
-            print(item)
+        # kws,s = synonyms.seg(text)
+        # # kws =tkit.Text().get_keywords(text,num=3)
+        # l = {'n','nz','ns','nr'}
+        # # kws_new = []
+        # keyword =''
+        # for key,item in enumerate(s):
+        #     print(key)
+        #     print(item)
 
-            print(kws[key])
-            if item in l:
-                keyword = keyword+" "+kws[key]
-        data = keyword
+        #     print(kws[key])
+        #     if item in l:
+        #         keyword = keyword+" "+kws[key]
+        
+        # keywords = tkit.Text().get_keywords( text,num=4)
+        keywords =get_keywords(text)
+        data= ' '.join(keywords)
+        # data= ''
+        # for item in keywords:
+        #     # data = data +' '+ item['word']
+        #     data = data +' '+ item
 
         cache.set(cache_key ,data)
     else:
         print('获取缓存')
         data = cache.get(cache_key)
     # print('dnn:',data)
-    return jsonify(data)        
+    return jsonify(data)   
+
+
+def get_keywords(text):
+    """获取关键词
+
+    """
+    kw = libs.Keyword(topK=3,allowPOS= ('ns', 'n', 'vn', 'v','t'))
+    kws= kw.get_keyword_list(text)
+    return kws
+
 
 @app.route("/json/calculate", methods=['GET', 'POST'])
 # 预测下一句
@@ -99,33 +116,13 @@ def json_calculate():
 
         keyword = request.args.get('keyword')
     else:
+        keyword = get_keywords(text)
+        keyword= ' '.join(keyword)
+        # keywords = tkit.Text().get_keywords( text,num=4)
+        # data= ''
+        # for item in keywords:
+        #     keyword = data +' '+ item['word']
 
-        # 抽取名称和形容词
-        # synonyms
-        kws,s = synonyms.seg(text)
-        # kws =tkit.Text().get_keywords(text,num=3)
-        l = {'n','nz','ns','nr'}
-        # kws_new = []
-        keyword =''
-        for key,item in enumerate(s):
-            print(key)
-            print(item)
-
-            print(kws[key])
-            if item in l:
-                keyword = keyword+" "+kws[key]
-            
-
-
-        
-        # print(kws)
-        # print(s)
-        # keyword = ''
-
-        # for k in kws:
-        #     keyword = keyword+ " "+k['word']
-        
-        # keyword = ' '.join(kws)
     print(keyword)
 
     cache_key ='json_calculate'+str(text)+str(keyword)
@@ -135,72 +132,89 @@ def json_calculate():
         # tnlp = libs.Nlp()
         # keywords = tnlp.dnn(text=text)
         # items,items_rank = synonyms.nearby(text)
-        items= libs.TerrySearch().search(text=keyword,limit= int(3))
+        items= libs.TerrySearch().search(text=keyword,limit= int(10))
         # nextS=SentencePrediction()
         mod= config.get('bert', 'model')
         # nextS.model_init(model=mod)
         nexts = []
         next_lines=[]
         contents=[]
-        for item in items:
-            # print(item['data'])
-            article = tkit.Text().text_processing(item['data']['content'],5)
+        if len(items)==0:
+            msg ='搜索内容为空'
+            data = {
 
-            # items.append(text)
-            # nextS.model_init()
-    
+                    'msg':msg
+                }
+            # cache.set(cache_key ,data)
+        else:
+        
+            for item in items:
+                # print(item['data'])
+                article = tkit.Text().text_processing(item['data']['content'],5)
+
+                # items.append(text)
+                # nextS.model_init()
+        
+                
+                # article ={
+                #     'calculate':next_line,
+                #     'content':item
+                # }
+
+                nexts.append(article)
+                # contents.append(item['data']['content'])
+                contents.append(item['data'])
+
+            pdata = {
+                'content':contents,
+                'text':text
+            }
+            tmpname = str(time.time())
+            output ='/tmp/output_'+tmpname+'.json'
+            inputfile ='/tmp/input_'+tmpname+'.json'
+            bert_run.c_inputfile(inputfile,pdata)
+            # torch.cuda.empty_cache()
+            try:
+                # next_line=nextS.sentence(item['data']['content'],text)
+
+
+                # if bert_run.c_inputfile(inputfile,pdata):
+                print('开始后台执行')
+                cmd ="python3 bert_run.py --model "+mod+" --do Sentence_Pre --output "+output+ " --input "+inputfile
+                next_lines = bert_run.run_cmd(cmd,inputfile,output)
+
+                # article['calculate'] = next_line
+                # next_lines = next_lines+next_line
+                # else:
+                #     print('创建训练文件出错')
+                
+            except:
+                # next_line=[]
+                print("运行预测失败")
+                msg ='预测失败'
+                # torch.cuda.empty_cache()
+                pass
+                #排序所有句子
+            msg ='预测成功 文章'+str(len(items))
+            full_next_line=[]
+            for  next_line in next_lines:
+                full_next_line =full_next_line +next_line
+            # full_next_line=list(set(full_next_line))
+            news_ids = []
+            for id in full_next_line:
+                if id not in news_ids:
+                    news_ids.append(id)
+            next_lines = sorted(news_ids, key=lambda k: k['next_line_prediction'],reverse=True)
+            next_lines_top= next_lines[0:9]
             
-            # article ={
-            #     'calculate':next_line,
-            #     'content':item
-            # }
 
-            nexts.append(article)
-            # contents.append(item['data']['content'])
-            contents.append(item['data'])
-
-        pdata = {
-            'content':contents,
-            'text':text
-        }
-        tmpname = str(time.time())
-        output ='/tmp/output_'+tmpname+'.json'
-        inputfile ='/tmp/input_'+tmpname+'.json'
-        bert_run.c_inputfile(inputfile,pdata)
-        try:
-            # next_line=nextS.sentence(item['data']['content'],text)
-
-
-            # if bert_run.c_inputfile(inputfile,pdata):
-            print('开始后台执行')
-            cmd ="python3 bert_run.py --model "+mod+" --do Sentence_Pre --output "+output+ " --input "+inputfile
-            next_lines = bert_run.run_cmd(cmd,inputfile,output)
-
-            # article['calculate'] = next_line
-            # next_lines = next_lines+next_line
-            # else:
-            #     print('创建训练文件出错')
-        except:
-            # next_line=[]
-            print("运行预测失败")
-            pass
-            #排序所有句子
-        full_next_line=[]
-        for  next_line in next_lines:
-            full_next_line =full_next_line +next_line
-        # full_next_line=list(set(full_next_line))
-        news_ids = []
-        for id in full_next_line:
-            if id not in news_ids:
-                news_ids.append(id)
-        next_lines = sorted(news_ids, key=lambda k: k['next_line_prediction'],reverse=True)
-        next_lines_top= next_lines[0:9]
-        data = {
-            'next_lines_top':next_lines_top,
-            'article':nexts,
-            'text':text,
-            'keyword':keyword
-        }
+            data = {
+                'next_lines_top':next_lines_top,
+                'article':nexts,
+                'text':text,
+                'keyword':keyword,
+                'msg':msg
+            }
 
         cache.set(cache_key ,data)
     else:
@@ -279,21 +293,22 @@ def json_search_pre():
     """
     text = request.args.get('text')
     limit = request.args.get('limit')
-    print(limit)
-    r= libs.TerrySearch().search(text=text,limit= int(limit))
-    items = []
-    for item in r:
-        item['data']['content']
-        print(item['data']['content'])
-        # tkit.Text().get_keyphrases(item['data']['content'], num=10)
-        text = tkit.Text().text_processing(item['data']['content'])
-        items.append(text)
 
-    # print(data)
-    # data={'data':r,
-    #     'msg':'返回数据'
-    # }
-    # data 
+    key ='json_search_pre'+text+str(limit)
+    if cache.get(key) is None:
+    # print(limit)
+        r= libs.TerrySearch().search(text=text,limit= int(limit))
+        items = []
+        for item in r:
+            item['data']['content']
+            print(item['data']['content'])
+            # tkit.Text().get_keyphrases(item['data']['content'], num=10)
+            text = tkit.Text().text_processing(item['data']['content'])
+            items.append(text)
+        cache.set(key ,items)
+    else:
+        print('获取缓存')
+        items = cache.get(key)
     return jsonify(items)
 
 # 编辑器页面

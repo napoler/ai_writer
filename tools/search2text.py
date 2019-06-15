@@ -1,55 +1,65 @@
-# from libs import TerrySearch
 import libs
-import fun
-import tqbm
-ARTICLE_PATH ="./data/wikitext/"
-# PATH ="/media/terry/65F33762C14D581B/tdata/wiki_zh/"
+from tqdm import tqdm
+import os
+import shutil
+import argparse
 
-#开始运行
-# libs.TerrySearch().start(path='/home/terry/pan/github/terry_search_web/terry_search_web/data/article/')
-# libs.TerrySearch().init_search()
+ARTICLE_PATH ="./data/kw2text_mini/"
+KWFILE= 'keywords.txt' #一行一个关键词
+KWLIST= ['狗','猫','宠物','动物','植物']
+def run():
+    """ 
+    >>> python3 search2text.py --text 犬
+    """
+    baiduai= libs.BaiduAi()
+#     parser = argparse.ArgumentParser(description='python3 search2text.py --text 犬')
+#     parser.add_argument('--text', type=str, default = None)
+#     #需要搜索的关键词
 
-# libs.TerrySearch().start(path='/home/terry/pan/github/terry_search_web/terry_search_web/data/article/')
-#搜索
+#     args = parser.parse_args()
+# import libs
+model ="/home/terry/pan/github/bert/model/last_xiangguan/"
+cf= libs.Classifier(model)
+#     text =args.text
+    with open(KWFILE) as  f1:#
+        keywords = f1.readlines()
+        for keyword in keywords:
+                r= libs.TerrySearch().search(text=keyword,limit=1000)
+                # print(len(r))
+                to =ARTICLE_PATH
+                
+                # for item in tqdm(r):
+                for item in r:
+ 
+                        # print(item['data']['content'])
+                        print(item['data']['title'])
 
-# import jieba
-text ="犬"
-# seg_list = jieba.cut_for_search(text)  # 搜索引擎模式
-# # print(", ".join(seg_list))
-# text=" ".join(seg_list)
-r= libs.TerrySearch().search(text=text,limit=10)
-# print(len(r))
-to =ARTICLE_PATH
-for item in r:
-    print(item['data']['path'])
-    copyfile(item['data']['path'], to)
+                        # print(item['data']['path'])
+  
+                        t = baiduai.topic(item['data']['title'],item['data']['content'])
+                        if 'item' in t:
+                    
+                                # print(t)
+                                # if len(t['item']['lv2_tag_list'])>0:
+                                if 'lv2_tag_list' in t:
 
+                                        new_tag_list = t['item']['lv2_tag_list'] +t['item']['lv1_tag_list']
+                                else:
+                                        new_tag_list = t['item']['lv1_tag_list']
+                                for tag in new_tag_list:
+                                        print(tag)
+                                        if tag['tag'] in KWLIST:
+                                                print ('数据为宠物相关')
+                                                print(item['data']['title'])
 
+                                                print(item['data']['path'])
+                                                try:    
+                                                        print('开始复制文件')
+                                                        shutil.copy(item['data']['path'], to)
+                                                except:
+                                                        pass
+                                                continue
+                                        
 
-# from whoosh.index import create_in
-# from whoosh.fields import *
-# schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
-# ix = create_in("indexdir", schema)
-# writer = ix.writer()
-# writer.add_document(title=u"First document", path=u"/a",
-#                      content=u"柯基犬 就是 牛 This is the first document we've added!")
-# writer.add_document(title=u"Second document", path=u"/b",
-#                      content=u"The second one is even more interesting!")
-# writer.commit()
-# from whoosh.qparser import QueryParser
-# with ix.searcher() as searcher:
-#      query = QueryParser("content", ix.schema).parse("柯基犬")
-#      results = searcher.search(query)
-#      if len(results)>0:
-#         print(results[0])
-#      print(results[0])
-
-
-# # from whoosh.query import *
-
-# # myquery = parser.parse(u"柯基犬 牛")
-# # # myquery = And([Term("content", u"柯基犬"), Term("content",u"牛")])
-
-# # results = searcher.search(myquery)
-# # print(len(results))
-# # print(results[0])
+if __name__=='__main__':
+    run()

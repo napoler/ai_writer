@@ -21,7 +21,7 @@ def run_cmd(cmd,inputfile,output):
         # cmd_mv_corpu_list="mv "+item+" "+corpus_end_path
         with open(output,'r') as load_f:
             load_dict = json.load(load_f)
-            print(load_dict)
+            # print(load_dict)
             os.remove(output)
             os.remove(inputfile)
             return load_dict
@@ -75,6 +75,8 @@ def Sentence_Pre(model,output,input):
     with open(output,"w") as f:
         json.dump(items,f)
         print("推测结果保存在:"+output)
+    #释放内存
+    nextS.free_ram()
     return 
 
 

@@ -40,6 +40,119 @@
         }
       });
 
+      // // 句子
+      // var group = $("ol#edit_tool").sortable({
+      //     group: 'serialization',
+      //     delay: 500,
+      //     onDrop: function ($item, container, _super) {
+      //       var data = group.sortable("serialize").get();
+  
+      //       var jsonString = JSON.stringify(data, null, ' ');
+  
+      //       $('#serialize_output2').text(jsonString);
+      //       _super($item, container);
+      //     }
+      //   });
+
+
+// 获取预测关键词
+function fenci_get (text){
+
+$.get(
+        "/json/sentence/fenci",
+        { text: text },
+        function (data) {
+          // ...
+          console.log('预测结果', data)
+          var textLong = ''
+          // var textL = ''
+          $.each(data.seg_list, function (key, value) {
+            console.log(key + ": " + value);
+            console.log(value);
+
+            textLong = textLong + '<li id="word' + key +'" class="word remove-'+value.remove +' ui mini button word ">' + value.word + "</li>"
+
+            // textL = textL +' '+ value.word
+
+          })
+
+          $("#edit_tool").html(textLong)
+          $("#original").html(data.text)
+          $('#msg').html('辅助预测加载成功')
+ })
+}
+
+
+$(document).on('click', '.word', function () {
+// 标记词语
+var text  = $(this).text();
+console.log(text);
+console.log(text.length);
+// console.log(times2('*', text.length));
+// var new_text = times2('*', text.length)
+var new_text = "##del##"+text+"##del##"
+$(this).text(new_text).addClass("del").removeClass('word')
+
+
+// 更新标记后的数据
+text = find_to_text(".word")
+
+$("#editing_juzi_edit").val(text)
+nlp(text)
+})
+
+
+$(document).on('click', '#save_post-button', function () {
+// 手动保存
+save_post()
+ 
+})
+
+$(document).on('click', '#save_post', function () {
+// 手动保存
+save_post()
+ 
+})
+// 获取预测关键词
+function fenci_update (text1,text2){
+
+$.get(
+        "/json/fenci_update",
+        { 'text1': text1,
+        'text2': text2,
+         },
+        function (data) {
+          // ...
+          console.log('fenci_update结果', data)
+          // var textLong = ''
+          // var textL = ''
+          // $.each(data.items, function (key, value) {
+          //   console.log(key + ": " + value);
+          //   console.log(value);
+
+          //   // textLong = textLong + '<li id="word' + key + '" class="ui mini button word ">' + value.word + "</li>"
+
+          //   textL = textL +' '+ value.word
+
+          // })
+
+          // $("#calculate_keyword").val(data)
+          $('#msg').html('句子提交成功')
+ })
+
+
+
+}
+
+// 这里提交训练样本
+$(document).on('click', '#fenci_update', function () {
+        // $(".aClass li .button").click(function () {
+          var text1=''
+        var text2 = $('#edit_tool').text();
+
+        fenci_update(text1,text2)
+
+});
       /****
       点击语句添加到编辑列表
       
@@ -757,13 +870,16 @@ $(document).on('click', '#editing_juzi_edit_ppl .gm', function () {
               $('#t_juzi').val(id);
               var text = $(this).text();
               $("#editing_juzi_edit").val(text)
-
+              // $("#edit_tool").empty()
+              $("#edit_tool").text('语句简写分析中...')
               // 获取预测关键词
               get_calculate_keyword(text)
 
-
+              // 执行句子简写预测
+              fenci_get (text)
               nlp(text)
-             
+
+
                // 自动执行预测下一句
               get_next_search(text)
              break;
@@ -772,7 +888,9 @@ $(document).on('click', '#editing_juzi_edit_ppl .gm', function () {
 
 
           case 2: 
-
+          // 移除之前的编辑状态
+          //  text2
+          //  fenci_updata(text1,text2)
            $(this).removeClass('editing').addClass('edited');
            $(this).data('state', 1); 
            $('#t_juzi').val('')
@@ -789,9 +907,6 @@ $(document).on('click', '#editing_juzi_edit_ppl .gm', function () {
         // $('#n_juzi1').val(nid);
 
 
-
-
-        
         console.log(text)
 
 
@@ -803,6 +918,140 @@ $(document).on('click', '#editing_juzi_edit_ppl .gm', function () {
 
       });
 
+      function find_to_text(class_name){
+        // 获取未标记的文字
+        // 输入过滤规则 class or id
+      text= ''
+      $(class_name).each(function ( index,element){
+
+        text = text+$(this).text()
+
+      })
+      return text
+
+      }
+
+$(document).ready(function(){
+    // 加载时候执行
+	//do something
+  var id = getUrlParam('id')
+  console.log(id)
+  $("#save_post_title-input").val(id)
+  // 自动获取之前保存的数据
+  $.post("/json/get/post", { 'id': id})
+    .done(function (data) {
+      // alert( "Data Loaded: " + data );
+      console.log(data)
+      // if (data.state) {
+      //   $("#msg").html('已经保存!')
+      // }
+      console.log("加载成功!")
+      // $("#msg").html(data.msg)
+      // get_article_plus
+
+      // uuid = uuidv4()
+      //   txt = txt.replace(/\s+/g, "");
+
+      //   var ju = ' <li  id="id-' + uuid + '">'
+      //     + txt
+      //     + '</li>'
+      //   $("#edit-list").append(ju);
+      $.each(data.data, function (key, value) {
+        uuid = uuidv4()
+       var ju = ' <li  id="id-' + uuid + '">'
+          + value
+          + '</li>'
+          $("#edit-list").append(ju);
+       });
+
+
+
+
+    });
+})
+ 
+function save_post(){
+
+  // 保存编辑的文档
+  var text= ''
+  // var id = getUrlParam('id')
+  var title = $("#save_post_title-input").val()
+    console.log('title:'+title)
+
+    
+    id=title
+    if (id.length == 0) 
+  { 
+  alert('输入标题保存'); 
+
+  return ''
+  }
+  console.log(id)
+
+  window.history.pushState({},0,'http://'+window.location.host+'/p/edit?id='+id);   
+  // if (id ==null){
+   
+  //   // id = new Date().getTime();
+  //   // id = new Date().toUTCString();
+  //   window.history.pushState({},0,'http://'+window.location.host+'/p/edit?id='+id);      
+  // }
+
+  if (id.length == 0) 
+  { 
+  alert('输入标题保存'); 
+  }
+
+  $("#edit-list li").each(function ( index,element){
+    var it= $(this).text()
+    text= text+it+'。\n'
+
+    
+  })
+
+  $.post("/json/save/post", { 'id': id, 'text': text })
+    .done(function (data) {
+      // alert( "Data Loaded: " + data );
+      console.log(data)
+      if (data.state) {
+        $("#msg").html('已经保存!')
+      }
+      console.log("已经保存!")
+      // $("#msg").html(data.msg)
+    });
+
+}
+      // 每 1000 毫秒执行 clock() 函数
+// var int=self.setInterval("save_post()",1000);
+// $('body').everyTime('1s',save_post);
+
+setInterval(function() {
+    // refresh list
+    save_post()
+}, 120000)
+ //获取url中的参数
+ function getUrlParam(name) {
+            // var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+            // var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+            // if (r != null) return unescape(r[2]); return null; //返回参数值
+
+
+            var url = window.location.search; //获取url中"?"符后的字串   
+       var theRequest = new Object();   
+       if (url.indexOf("?") != -1) {   
+          var str = url.substr(1);   
+          strs = str.split("&");   
+          for(var i = 0; i < strs.length; i ++) {   
+              //就是这句的问题
+             theRequest[strs[i].split("=")[0]]=decodeURI(strs[i].split("=")[1]); 
+             //之前用了unescape()
+             //才会出现乱码  
+          }   
+       }   
+       return theRequest[name];  
+
+        }
+
+ 
 
 function nlp(text){
 // 获取
@@ -832,6 +1081,8 @@ function nlp(text){
 
   //         })
 
+
+        // 执行nlp预测
   $.get(
           "/json/nlp",
           { text: text },
@@ -1055,7 +1306,32 @@ function nlp(text){
 
       });
 
+      $(document).on('click', '#used', function () {
+        // 标记文章已经发布
+        id=getUrlParam('id')
+        $.get(
+        "/json/move_used",
+        {
+          'id': id,
 
+        },
+        function (data) {
+          alert("已经标记发布")
+
+          // console.log(data);
+          // if (data.sentence.length > 2) {
+          //   // for (item in data.sentence) {
+          //   //             console.log('语句为', item)
+          //   //             data.summary[item]['sentence']
+          //   // }
+          //   // var juzi = $('#editing_juzi').text()
+          //   var juzi = $('#editing_juzi_edit').val();
+
+          //   get_next_sentence_p(data.text, juzi)
+          // }
+        })
+
+})
       // 进行改错
       $(document).on('click', '#gaicuo', function () {
         // #移除之前的状态
@@ -1280,28 +1556,22 @@ function nlp(text){
     var html = $(this).html()
         $('#yw-modal .article').empty().html(html)
 
-    }
- 
+    } 
+    });
+    var line = $(this).data("line");
+    var pre_line = $("#editing_juzi_edit").val()
+    $('#yw-modal .pre_line').text(pre_line)
+    $('#yw-modal .article .sentence'+line).addClass('find');
+    // $("#yw-modal .article span")
+    // $(this).each(function ( index,element){
+    // 		var value = $(this).data("line");
+    //     // if (value ===line){
+          
 
-
-
-
- 
-});
-var line = $(this).data("line");
-var pre_line = $("#editing_juzi_edit").val()
-$('#yw-modal .pre_line').text(pre_line)
-$('#yw-modal .article .sentence'+line).addClass('find');
-// $("#yw-modal .article span")
-// $(this).each(function ( index,element){
-// 		var value = $(this).data("line");
-//     // if (value ===line){
-      
-
-//     // }
- 
- 
-// });
+    //     // }
+    
+    
+    // });
 
 
 
@@ -1424,6 +1694,22 @@ $('#yw-modal .article .sentence'+line).addClass('find');
   </script>
 
   <style>
+
+
+ol#edit_tool {
+    margin-left: 0;
+    padding: 0;
+}
+li.word {
+    padding: 5px 10px !important;
+    margin: 2px;
+}
+#edit_tool li.remove-Yes{
+
+background: #ef9b9b;
+
+    }
+
     .find{
       background: #dcf31d;
       border: 4px solid #dcf31d;
@@ -1716,7 +2002,9 @@ $('#yw-modal .article .sentence'+line).addClass('find');
         <input id="search-input" type="text" placeholder="搜索...">
         <button id="search-button" class="ui button">搜索</button>
 
-      
+        <!-- <label>搜索资料</label> -->
+        <input id="save_post_title-input" type="text" placeholder="输入标题...">
+        <button id="save_post-button" class="ui button">提交</button>
       </div>
     </div>
      <!-- 搜索盒子 -->
@@ -1784,6 +2072,9 @@ $('#yw-modal .article .sentence'+line).addClass('find');
             <textarea id="add_juzi_edit" rows="3" cols="20"> </textarea>
 
             <button id="add_juzi_edit_btn" class="ui green button">添加语句</button>
+            <button id="used" class="ui green button">标记使用</button>
+            <a href="/p/edit"  class="ui green button">创建内容</a>
+            
           </div>
 
 
@@ -1856,7 +2147,10 @@ $('#yw-modal .article .sentence'+line).addClass('find');
               等级4<span class='gm4 gm'></span>
               等级5<span class='gm5 gm'></span></p>
           <textarea id="editing_juzi_edit" rows="3" cols="20">
-            </textarea>
+          </textarea>
+
+          <ol id="edit_tool" class='serialization'>
+          </ol>
           </div>
  
             <div id="editing_juzi_edit_ppl_value" class="">
@@ -1898,6 +2192,9 @@ $('#yw-modal .article .sentence'+line).addClass('find');
             <button id='mask' class="ui green button">预测</button>
             <button id='gaicuo' class="ui green button">改错</button>
             <button id='del_s' class="ui green button">删除这句</button>
+            <button id='fenci_update' class="ui red button">add样本</button>
+
+     
             <div class="field">
               <label>下一句关键词</label>
               <input id="calculate_keyword" type="text" name="calculate_keyword" placeholder="下一句关键词">

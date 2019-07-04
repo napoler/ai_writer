@@ -26,7 +26,7 @@ def run():
         #     args = parser.parse_args()
         # import libs
         model ="/home/terry/pan/github/bert/model/last_xiangguan/"
-        cf= libs.Classifier(model)
+        
 
         #     text =args.text
         with open(KWFILE) as  f1:#
@@ -43,7 +43,13 @@ def run():
                 
                 # for item in tqdm(r):
                 other = 0
+                i = 0
+                cf= libs.Classifier(model)
                 for item in r:
+                        if i%2 == 0:
+                                #释放显存和内存
+                                cf.free_ram()
+                                cf= libs.Classifier(model)
 
                         # print(item['data']['content'])
                         print(item['data']['title'])
@@ -71,11 +77,14 @@ def run():
                                         # continue
                                 else:
                                         print("其它内容")
-                                        if other> 1000:
+                                        if other> 200:
                                                 print("不相干内容过多自动跳出")
                                                 break
                                         
                                         other = other+1
+                        i = i+1
+                        # cf.free_ram()
+
                 print("运行搜索任务完成!!!!!!!")
                                 
  

@@ -15,17 +15,25 @@ class Classifier:
     """预测分类"""
     def __init__(self,model="",num_labels =2):
         print('kaishi')
+        torch.cuda.empty_cache()
         self.num_labels =num_labels
         self.tokenizer = BertTokenizer.from_pretrained(model)
         self.model = BertForSequenceClassification.from_pretrained(model,num_labels = num_labels)
         # model = BertForSequenceClassification.from_pretrained('bert-base-chinese')
         # model = BertForNextSentencePrediction.from_pretrained('bert-base-chinese')
         self.model.eval()
+              # device='cpu'
+        # self.device='cuda'
+        if torch.cuda.is_available():
+
+            self.device ='cuda'
+        else:
+            self.device ='cpu'
+        print('use ',self.device)
+        
+        self.model.to(self.device)
         # num_labels =2
     def c(self,text):
-        if text.strip()=='':
-            return 
-
         num_labels =self.num_labels
         max_seq_length =20
         # text="天气真是太好了"
@@ -59,7 +67,8 @@ class Classifier:
         segment_ids_tensor = torch.tensor([segment_ids])
         # labels_tensor = torch.tensor([labels])
         
-        device='cpu'
+        # device='cpu'
+        device=self.device
         
         input_ids_tensor = input_ids_tensor.to(device)
         input_mask_tensor = input_mask_tensor.to(device)
@@ -79,7 +88,9 @@ class Classifier:
     #     k = logits.view(-1, 2)
         logits.detach().cpu().numpy()
         n = logits.detach().cpu().numpy()
+        print(n)
         preds = np.argmax(n, axis=1)
+        # ["Yes", "No"]
         return preds
 
     def prediction(self,text):
@@ -99,10 +110,11 @@ class Classifier:
         data=[]
         for item in text_list:
             pred= self.prediction(item)
-            # print(item)
-            # print(pred)
+            print(item)
+            print(pred)
             # print("##"*50)
             data.append(pred[0])
+
         return data
     def article_prediction(self,article):
         tx = tkit.Text()
@@ -124,8 +136,6 @@ class Classifier:
     def proportion_article_auto(self,article):
         """
         预测文章各种类别所占比重"""
-        if article.strip()=='':
-            return 
         full =self.article_prediction(article)
         l = self.top_three(full)
         data = []
@@ -137,6 +147,7 @@ class Classifier:
 
             }
             data.append(it)
+        
         return data
 
 

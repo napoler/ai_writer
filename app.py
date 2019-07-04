@@ -14,36 +14,73 @@ import bert_run
 from bert_sample import SentencePrediction,MaskedLM
 import Terry_toolkit as tkit
 import configparser
+from fun import *
 
 config = configparser.ConfigParser()
 
-config.read("./config.ini")
+config.read("./config/config.ini")
 
 # config.get('site', 'user'))
 app = Flask(__name__)
 
 
-def get_post_data():
-    """
-    从请求中获取参数
-    :return:
-    """
-    data = {}
-    if request.content_type.startswith('application/json'):
-        data = request.get_data()
-        data = json.loads(data)
-    else:
-        for key, value in request.form.items():
-            if key.endswith('[]'):
-                data[key[:-2]] = request.form.getlist(key)
-            else:
-                data[key] = value
-    return data
 @app.route("/")
 def home():
     print(config.get('site', 'name'))
     return render_template("index.html")
 
+
+@app.route("/post/list")
+def post_list():
+    print(config.get('site', 'name'))
+    # id_list
+    tfile =  tkit.File()
+    id_list=tfile.file_List('./data/article/')
+    new_id_list  =[]
+    for item in id_list:
+        id=item.split("/")[-1]
+        
+        new_id_list.append(id.replace(".txt", ""))
+    #降序输出
+    print(new_id_list.sort(reverse=True))
+    return render_template("post_list.html",id_list=new_id_list)
+@app.route("/json/save/post", methods=['GET', 'POST'])
+def json_save_post():
+    """
+    保存内容
+    输入id
+    和text
+
+    """
+    data= get_post_data()
+    # print('data',data)
+    text = data['text']
+    id =  data['id']
+
+    save_article_plus(text,id)
+    d={'state':True
+    }
+    
+    return jsonify(d)
+
+@app.route("/json/get/post", methods=['GET', 'POST'])
+def json_get_post():
+    """
+    获取内容
+    输入id
+    和text
+
+    """
+    data= get_post_data()
+    # print('data',data)
+    # text = data['text']
+    id =  data['id']
+    text_list=get_article_plus(id)
+    d={'state':True,
+        'data':text_list
+    }
+    print(d)
+    return jsonify(d)
 @app.route("/json/nlp", methods=['GET', 'POST'])
 def json_nlp():
     text = request.args.get('text')
@@ -366,6 +403,102 @@ def json_sentence_prediction():
         data={'msg':'数据不完整'}
     return jsonify(data)
     # return "Hello World!"
+@app.route("/json/sentence/fenci")
+def json_sentence_fenci():
+    """
+    获取分词 预测
+    
+    """
+    text = request.args.get('text')
+    seg_list=yuce(text)
+    data={
+        'seg_list':seg_list,
+        'text':text
+
+    }
+    return jsonify(data)
+
+
+
+@app.route("/json/fenci_update")
+
+def json_sentence_fenci_update():
+    """
+    执行提交后处理提交
+    """
+    # data= get_post_data()
+    # print('data',data)
+    text1 = request.args.get('text1')
+    text2 = request.args.get('text2')
+    # previous_line=request.args.get('sentence')
+    # text = data['text']
+    # text2 = data['text2']
+    # seg_list=[]
+    # for it in jieba.cut(text, cut_all=False):
+    # # print("Default Mode: " + "/ ".join(seg_list))  # 精确模式
+    # # print()
+    #     seg_list.append(it)
+
+
+
+    #保存词性训练数据
+    # libs_text= libs.Text()
+    text1_pseg  =libs.Text().text_part_pseg(text1)
+    text2_pseg  =libs.Text().text_part_pseg(text2)
+    file_pseg_write_obj = open("corpus_pseg.txt", 'a')
+    #python2可以用file替代open
+    # for var in mylist:
+    text_pseg = text1_pseg+"\n"+text2_pseg+"\n\n"
+    file_pseg_write_obj.writelines(text_pseg)
+    file_pseg_write_obj.close()
+
+
+    #保存训练数据
+    file_write_obj = open("corpus.txt", 'a')
+    #python2可以用file替代open
+    # for var in mylist:
+    text = text1+"\n"+text2+"\n\n"
+    file_write_obj.writelines(text)
+
+    # 创建bert使用的训练数据
+    # #随机产生一条
+    # random_sentence_one()
+
+    # 添加一条标记数据
+    add_sentence_one(text2)
+
+        #先写入columns_name
+        # writer.writerow(["index","a_name","b_name"])
+        #写入多行用writerows
+        # writer.writerows([[text1,text2]])
+
+    file_write_obj.close()
+
+    return jsonify('')
+
+
+
+
+
+
+
+@app.route("/json/move_used")
+
+def json_move_used():
+    """
+    执行提交后处理提交
+    """
+    # data= get_post_data()
+    # print('data',data)
+    id = request.args.get('id')
+    move_used(id)
+    
+    return jsonify('')
+
+
+
+
+
 
 
 @app.route("/tools/sentence/gaicuo")

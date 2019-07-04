@@ -1,9 +1,0 @@
-
-x,eng,x,p,x,eng,x,nr,nr,a,uj,n,x,n,x,eng,x,d,x,eng,x,v,v,x,x,eng,x,c,x,eng,x,p,r,n,x,nr,nr,uj,n,uj,d,a,x,d,d,v,n,uj,n,ul
-
-
-x,eng,x,x,x,eng,x,eng,x,x,x,eng,x,eng,x,x,x,eng,x,eng,x,x,x,eng,x,c,n,uj,n,x,x,eng,x,v,x,eng,x,n,x,eng,x,uj,x,eng,x,d,x,eng,x,v,x,eng,x,a,x,eng,x,uj,x,eng,x
-
-
-x,eng,x,n,x,eng,x,d,v,n,x,eng,x,uj,x,eng,x,a,x,eng,x,v,x,eng,x,eng,x,v,x,eng,x,eng,x,m,x,eng,x,eng,x,uj,x,eng,x,x,c,p,i,f,x,x,eng,x,r,x,eng,x,d,m,v,r,nr,x,eng,x,n,x,eng,x,eng,x,n,x,eng,x
-

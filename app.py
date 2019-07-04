@@ -445,7 +445,7 @@ def json_sentence_fenci_update():
     # libs_text= libs.Text()
     text1_pseg  =libs.Text().text_part_pseg(text1)
     text2_pseg  =libs.Text().text_part_pseg(text2)
-    file_pseg_write_obj = open("corpus_pseg.txt", 'a')
+    file_pseg_write_obj = open("data/corpus_pseg.txt", 'a')
     #python2可以用file替代open
     # for var in mylist:
     text_pseg = text1_pseg+"\n"+text2_pseg+"\n\n"
@@ -454,7 +454,7 @@ def json_sentence_fenci_update():
 
 
     #保存训练数据
-    file_write_obj = open("corpus.txt", 'a')
+    file_write_obj = open("data/corpus.txt", 'a')
     #python2可以用file替代open
     # for var in mylist:
     text = text1+"\n"+text2+"\n\n"
@@ -492,7 +492,7 @@ def json_move_used():
     # print('data',data)
     id = request.args.get('id')
     move_used(id)
-    
+
     return jsonify('')
 
 

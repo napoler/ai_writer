@@ -8,10 +8,53 @@ from random import choice
 import random
 import gc,os
 import subprocess
-
-
+import hashlib
+import time
 import shutil
+# from MagicBaidu import MagicBaidu
 
+def baidu_search(keyword):
+    # mb = MagicBaidu()
+    # l=[]
+    # for i in mb.search(query=keyword):
+    #     try:
+    #         # print(i)
+    #         l.append(i)
+    #     except:
+    #         pass
+    l = run_baidu(keyword)
+    print(l)
+    return l
+    # bsearch = libs.BaiduSearch()
+    # lis,kws = bsearch.search(keyword=keyword,num = 2)
+    # print(lis,kws)
+# baidu_search('柯基犬')
+def url_text(url):
+    ut = libs.UrlText()
+    print(url)
+    text = ut.get_text(url)
+    print(text)
+        #将文本保存
+    # 
+    if len(text)>0:
+            
+        save_article_add_search(text)
+        data={
+            'data':text,
+            'state':'success'
+        }
+
+
+        
+    else:
+        data={
+            'data':'',
+            'state':'fail'
+        }
+    print(data)
+    return data
+# a = url_text("https://movie.douban.com/subject/30441625/")
+# print(a)
 def get_post_data():
     """
     从请求中获取参数
@@ -42,6 +85,23 @@ def save_article(text):
         my_open = open(ARTICLE_PATH+articlefile, 'a')
         my_open.write(str(text)+'\n\n')
         my_open.close()
+
+def save_article_add_search(text):
+    # 存储单篇文章
+    # ARTICLE_PATH
+    #text = 'kngines'
+    md5_val = hashlib.md5(text.encode('utf8')).hexdigest()
+
+    articlefile= 'article_'+str(md5_val)+'.txt'
+    if os.path.isfile('./data/kw2text_mini/'+articlefile):
+        print("文件已经存在跳过")
+    else:
+        my_open = open('./data/kw2text_mini/'+articlefile, 'a')
+        my_open.write(str(text)+'\n\n')
+        my_open.close()
+        # 添加文件到本地搜索
+        libs.TerrySearch().add_one('./data/kw2text_mini/'+articlefile)
+
 
 
 def save_article_plus(text,id):
@@ -348,12 +408,49 @@ def yuce(text):
     data = run_cmd(cmd,inputfile,output)
     return data
 
+def run_baidu(kwd):
+    """
+    执行命令行运行函数
+    获取百度搜索结果
+    后台执行浏览器操作
+    """
+    # cmd_env="source activate;"
+    output = './data/run_baidu'+str(time.time())+'.json'
+    cmd="../bin/python3 bert_run_jianxie.py --do baidu --text "+kwd+' --output '+output
+    print(cmd)
+    inputfile=''
+    data = run_cmd(cmd,inputfile,output)
+    print(data)
+    return data
+def run_cmd_url_text(url):
+    """
+    执行命令行运行函数
+    获取网页内容
+    """
+    output = './data/url_text'+str(time.time())+'.json'
+    cmd="../bin/python3 bert_run_jianxie.py --do url_text --url "+url+' --output '+output
+    print(cmd)
+    inputfile=''
+    data = run_cmd(cmd,inputfile,output)
+    
+    return data
+
 def run_cmd(cmd,inputfile,output):
     """
     执行命令行运行函数
     """
-    e = subprocess.call(cmd, shell=True)
-    print(e)
+    # my_env = {**os.environ, 'PATH': '../bin/:/usr/sbin:/sbin:' + os.environ['PATH']}
+    # subprocess.Popen(['source ','../bin/activate'],shell=True)
+    # e = subprocess.call(cmd, shell=True,env={'PATH':'../bin'})
+
+
+    # e = subprocess.Popen(cmd, shell=True,env=my_env).wait()
+
+    # p = Popen("/path/to/env.sh", stdin=PIPE) # set environment, start new shell 
+    # p.communicate("python something.py\nexit") # pass commands to the opened shell 
+    # # e = subprocess.Popen([python_bin, script_file])
+    # print(e)
+    e=os.system('. ../bin/activate &&'+cmd) 
 
     if e==0:
         print("执行成")
@@ -366,6 +463,7 @@ def run_cmd(cmd,inputfile,output):
             return load_dict
     else:
         print("执行失败")
+        return {'data':'','state':'fail'}
 
 
 

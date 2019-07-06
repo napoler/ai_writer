@@ -308,6 +308,65 @@ def json_rewrit_statement():
     print('json_rewrit_statement',items)
     return jsonify(items)
 
+@app.route("/json/get_url" ,methods=['GET', 'POST'])
+def json_get_url():
+    """返回搜索json结果
+    """
+    url = request.args.get('url')
+
+    key ='json_get_url'+url
+    if cache.get(key) is None:
+        # data=url_text(url)
+        data=run_cmd_url_text(url)
+        
+        
+        if data['state']=='success':
+            r = tkit.Text().text_processing(data['data'], num=5)
+        # print(data)
+        
+            data={'data':r,
+                'msg':'返回数据'
+            }
+        else:
+            data={'data':'',
+                'msg':'获取失败'
+            }
+        
+        cache.set(key ,data)
+    # data 
+    else:
+        print('获取缓存')
+        data = cache.get(key)
+    return jsonify(data)
+
+@app.route("/json/search_baidu" ,methods=['GET', 'POST'])
+def json_search_baidu():
+    """返回搜索json结果
+    """
+    keyword = request.args.get('keyword')
+    
+    key ='json_search_baidu'+keyword
+    if cache.get(key) is None:
+        # data=url_text(url)
+        # data=run_cmd_url_text(url)
+        
+        
+        r = baidu_search(keyword)
+        # print(r)
+    
+        data={'data':r,
+            'msg':'返回数据'
+        }
+       
+        
+        cache.set(key ,data)
+    # data 
+    else:
+        print('获取缓存')
+        data = cache.get(key)
+    return jsonify(data)
+
+
 
 @app.route("/json/search" ,methods=['GET', 'POST'])
 def json_search():
@@ -323,6 +382,8 @@ def json_search():
     # }
     # data 
     return jsonify(r)
+
+
 
 @app.route("/json/search_pre" ,methods=['GET', 'POST'])
 def json_search_pre():
@@ -340,7 +401,7 @@ def json_search_pre():
             item['data']['content']
             print(item['data']['content'])
             # tkit.Text().get_keyphrases(item['data']['content'], num=10)
-            text = tkit.Text().text_processing(item['data']['content'])
+            text = tkit.Text().text_processing(item['data']['content'], num=5)
             items.append(text)
         cache.set(key ,items)
     else:
@@ -576,8 +637,8 @@ def mlm(text1,text2):
 
 
 if __name__ == "__main__":
-    app.run()
-    # app.run(
-    #     host='0.0.0.0',
-    #     port=8110,
-    #     debug=True)
+    # app.run()
+    app.run(
+        host='0.0.0.0',
+        port=9001,
+        debug=True)

@@ -1,3 +1,5 @@
+#!/home/terry/pan/github/ai_writer/bin/python3
+
 from cacheout import Cache
 cache = Cache()
 
@@ -22,8 +24,34 @@ def prediction(text):
     执行命令行运行函数
     这里是简化
     """
-    cmd="python3 bert_run_jianxie.py --text "+text
+    cmd="../bin/python3 bert_run_jianxie.py --do jianxie --text "+text
     output = './data/jianxie.json'
+    inputfile=''
+    data = run_cmd(cmd,inputfile,output)
+    return data
+
+
+
+def run_cmd_url_text(url):
+    """
+    执行命令行运行函数
+    这里是简化
+    """
+    output = './data/url_text'+str(time.time())+'.json'
+    cmd="../bin/python3 bert_run_jianxie.py --do url_text --url "+url+' --output '+output
+    
+    inputfile=''
+    data = run_cmd(cmd,inputfile,output)
+    return data
+
+def run_baidu_cmd(kwd):
+    """
+    执行命令行运行函数
+    这里是简化
+    """
+    output = './data/url_text'+str(time.time())+'.json'
+    cmd=["../bin/python3", "bert_run_jianxie.py --do baidu --text "+kwd+' --output '+output]
+    
     inputfile=''
     data = run_cmd(cmd,inputfile,output)
     return data
@@ -33,7 +61,8 @@ def run_cmd(cmd,inputfile,output):
     """
     执行命令行运行函数
     """
-    e = subprocess.call(cmd, shell=True)
+    # e = subprocess.call(cmd, shell=True)
+    e = subprocess.Popen(cmd, shell=True)
     print(e)
 
     if e==0:
@@ -63,6 +92,10 @@ def run ():
     parser.add_argument('--output', type=str, default = './data/jianxie.json')
     # output 输出路径
     parser.add_argument('--text', type=str, default = None)
+
+
+
+    parser.add_argument('--url', type=str, default = None)
     # # --content 内容
     # parser.add_argument('--text', type=str, default=None)
     # # --text 前一句
@@ -74,6 +107,33 @@ def run ():
     if args.do == 'jianxie':
         # 执行预测
         jianxie(args.model,args.output,args.text)
+    if args.do == 'url_text':
+        # 执行预测
+        run_url_text(args.output,args.url)
+
+    if args.do == 'baidu':
+        # 执行预测
+
+        run_baidu(args.output,args.text)
+def run_baidu(output,keyword):
+    print("已经运行来")
+    # data= url_text(url)
+    bsearch = libs.BaiduSearch()
+    data,kws = bsearch.search(keyword=keyword,num = 1)
+    print(data,kws)
+    with open(output,"w") as f:
+        json.dump(data,f)
+        print("保存获取url内容到:"+output)
+    pass
+def run_url_text(output,url):
+    print("已经运行来")
+    data= url_text(url)
+
+    with open(output,"w") as f:
+        json.dump(data,f)
+        print("保存获取url内容到:"+output)
+    pass
+
 
 def jianxie(model,output,text):
     # model =""

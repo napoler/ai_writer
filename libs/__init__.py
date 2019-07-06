@@ -9,3 +9,7 @@ from .sentence_parser import LtpParser
 from .triple_extraction import TripleExtractor
 from .text_pseg import Text
 from .terry import Terry
+
+
+from .baidu_search import BaiduSearch
+from .url_text import UrlText

@@ -54,7 +54,21 @@
       //     }
       //   });
 
+      // var content = $('#content').html();
+    $('.kwd').click(function () {
 
+       var content = $('#slist').html(content);
+        var searchText = $(this).val();
+        if (searchText.length == 0) {
+            return false;
+        }
+        var regExp = new RegExp(searchText, 'g');
+        var newHtml = content.replace(regExp, '<span id="result" style="background:yellow;color:red;">' + searchText + '</span>');
+        $('#slist').html(newHtml);
+        var X = $('#result').offset().top;
+        var Y = $('#result').offset().left;
+        window.scrollTo(X, Y);
+    });
 // 获取预测关键词
 function fenci_get (text){
 
@@ -937,6 +951,8 @@ $(document).ready(function(){
   var id = getUrlParam('id')
   console.log(id)
   $("#save_post_title-input").val(id)
+
+
   // 自动获取之前保存的数据
   $.post("/json/get/post", { 'id': id})
     .done(function (data) {
@@ -968,6 +984,15 @@ $(document).ready(function(){
 
 
     });
+
+    if (id == undefined) 
+  { 
+  // alert('输入标题保存'); 
+
+  $('#add-title-modal').modal('show');
+
+  return ''
+  }
 })
  
 function save_post(){
@@ -982,7 +1007,9 @@ function save_post(){
     id=title
     if (id.length == 0) 
   { 
-  alert('输入标题保存'); 
+  // alert('输入标题保存'); 
+
+  $('#add-title-modal').modal('show');
 
   return ''
   }
@@ -998,7 +1025,8 @@ function save_post(){
 
   if (id.length == 0) 
   { 
-  alert('输入标题保存'); 
+  // alert('输入标题保存'); 
+  $('#add-title-modal').modal('show');
   }
 
   $("#edit-list li").each(function ( index,element){
@@ -1451,6 +1479,8 @@ function nlp(text){
     function item_html_v1(data) {
       //  获取到的搜索转换成html
      if( $('.article').data('md5')==data.md5){
+       console.log($('.article').data('md5'))
+       console.log(data.md5)
       console.log('已经存在');
        return 
      }
@@ -1468,7 +1498,7 @@ function nlp(text){
         for (var item in data.keywords) {
           // console.log("summarys." + item +value.keyphrases[item]['sentence']);
           // console.log("summarys." + item + value.keywords[item]['word']);
-          textLong = textLong + '<span>'
+          textLong = textLong + '<span class="kwd">'
             + data.keywords[item]['word']
             //  +'</div><button class="ui button use">'
             //   +'  使用</button></li>'
@@ -1576,11 +1606,142 @@ function nlp(text){
 
 
 
-      $('.ui.modal').modal('show');
+      $('#yw-modal').modal('show');
     
 
 
     })
+
+
+    // 添加url text
+    $(document).on('click', '#show_add_url', function () {
+
+      $('#url_text-modal').modal('show');
+    
+    })
+
+  // 添加url text
+  $(document).on('click', '#url_text-modal .submit', function () {
+
+
+   var url= $("#url_text-modal .url").val()
+   var kwd= $("#url_text-modal .kwd").val()
+   if(url.length>0){
+    add_url(url)
+   }
+
+   if(kwd.length>0){
+    baidu_kwd(kwd)
+   }
+
+
+
+// $('#url_text-modal').modal('show');
+
+
+
+})
+
+
+
+
+
+
+  // 点击搜索结果 自动获取内容
+  $(document).on('click', '#url_text-modal .baidu_list dt span', function () {
+    // $(this).data('url')
+var url= $(this).data('url')
+// var kwd= $("#url_text-modal .kwd").val()
+if(url.length>0){
+ add_url(url)
+}
+ 
+
+})
+
+
+
+
+
+function baidu_kwd(kwd){
+  // 执行百度搜索
+  $.get(
+  "/json/search_baidu",
+  {
+    'keyword': kwd,
+    // 'keyword': calculate_keyword,
+    // num: 10
+  },
+  function (data) {
+    // ...
+    console.log('搜索结果：', data)
+    $("#calculate_list_msg").html(data.msg)
+    
+    // $("#calculate_keyword").val(data.keyword)
+    // var textLong = ''
+    // calculate_items(data.next_lines_top)
+    // item_html_v1(data.data)
+
+    // var html = $("#slist > div.article:nth-child(1)").html()
+    
+    // $("#url_text-modal .article").html(html)
+    var html='<dl>'
+    $.each(data.data, function (key, value) {
+      // 将内容添加到搜索结果
+     
+      html= html+'<dt><span data-url="'+value['url']+'" class="title">'+value['title']+'</span></dt>'
+      html= html+'<dd>'+value['text']+'</dd>'
+   
+    },
+      "json"
+    );
+
+    html=html+'</dl>'
+    $('.baidu_list').html(html)
+
+
+
+  });
+}
+function add_url(url){
+
+  // 通过url获取素材
+  $.get(
+  "/json/get_url",
+  {
+    'url': url,
+    // 'keyword': calculate_keyword,
+    // num: 10
+  },
+  function (data) {
+    // ...
+    console.log('搜索结果：', data)
+    $("#calculate_list_msg").html(data.msg)
+    
+    // $("#calculate_keyword").val(data.keyword)
+    // var textLong = ''
+    // calculate_items(data.next_lines_top)
+    item_html_v1(data.data)
+
+    var html = $("#slist > div.article:nth-child(1)").html()
+    
+    $("#url_text-modal .article").html(html)
+
+    // $.each(data.data, function (key, value) {
+    //   // 将内容添加到搜索结果
+    //   item_html_v1(value)
+    // },
+    //   "json"
+    // );
+
+
+
+
+  });
+
+
+
+}
 
     function calculate_items(items) {
       var otext=$("#editing_juzi_edit").val();
@@ -1694,8 +1855,23 @@ function nlp(text){
   </script>
 
   <style>
+.modal {
+ 
+    overflow-y: auto; 
+    padding: 50px;
+    width: 86%;
+}
 
-
+#url_text-modal .baidu_list dt span{
+  padding: 5px;
+    font-size: 20px;
+    display: block;
+    /* border-top: 2px #ccc solid; */
+}
+#url_text-modal .baidu_list dt{
+  margin-top: 5px;
+    background: #dfe6e3;
+}
 ol#edit_tool {
     margin-left: 0;
     padding: 0;
@@ -1966,6 +2142,8 @@ background: #ef9b9b;
       position: absolute;
       /** Define arrowhead **/
     }
+
+    
   </style>
 
 </head>
@@ -2003,8 +2181,7 @@ background: #ef9b9b;
         <button id="search-button" class="ui button">搜索</button>
 
         <!-- <label>搜索资料</label> -->
-        <input id="save_post_title-input" type="text" placeholder="输入标题...">
-        <button id="save_post-button" class="ui button">提交</button>
+     
       </div>
     </div>
      <!-- 搜索盒子 -->
@@ -2072,6 +2249,7 @@ background: #ef9b9b;
             <textarea id="add_juzi_edit" rows="3" cols="20"> </textarea>
 
             <button id="add_juzi_edit_btn" class="ui green button">添加语句</button>
+            <button id="show_add_url" class="ui green button">添加素材</button>
             <button id="used" class="ui green button">标记使用</button>
             <a href="/p/edit"  class="ui green button">创建内容</a>
             
@@ -2188,11 +2366,12 @@ background: #ef9b9b;
             <button id='addpre' class="ui orange button">添加到前面</button>
             <button id='addnext' class="ui yellow button">添加到之后</button>
             <button id='remove' class="ui olive button">删除</button> -->
+            <button id='fenci_update' class="ui red button">add样本</button>
             <button id='nlp' class="ui green button">nlp</button>
             <button id='mask' class="ui green button">预测</button>
             <button id='gaicuo' class="ui green button">改错</button>
             <button id='del_s' class="ui green button">删除这句</button>
-            <button id='fenci_update' class="ui red button">add样本</button>
+           
 
      
             <div class="field">
@@ -2295,6 +2474,118 @@ background: #ef9b9b;
      </div> -->
     <div class="article">
  
+    </div>
+  </div>
+  <div class="actions">
+    <!-- <div class="ui black deny button">
+      Nope
+    </div> -->
+    <div class="ui positive right labeled icon button">
+     关闭
+      <i class="checkmark icon"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<!-- 这里是添加url_text弹出层 -->
+
+<div id = 'url_text-modal' class="ui modal">
+  <i class="close icon"></i>
+  <div class="header">
+    添加素材
+  </div>
+  <div class=" content">
+
+    <div id='add-sucai' class="ui form">
+      <div class="field">
+        <label>url</label>
+        <input class='url' type="text" name="url" placeholder="网页地址">
+      </div>
+      <div class="field">
+        <label>关键词</label>
+        <input class='kwd' type="text" name="kwd" placeholder="关键词">
+      </div>
+
+      <div class="field">
+        <label>文本</label>
+        <textarea class='text'></textarea>
+      </div>
+
+      <!-- <div class="field">
+        <div class="ui checkbox">
+          <input type="checkbox" tabindex="0" class="hidden">
+          <label>I agree to the Terms and Conditions</label>
+        </div>
+      </div> -->
+      <button id='' class="submit ui button" type="submit">Submit</button>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class="baidu_list">
+ 
+      </div>
+      <!-- <div class="this_line">
+ 
+     </div> -->
+    <div class="article">
+ 
+    </div>
+  </div>
+  <div class="actions">
+    <!-- <div class="ui black deny button">
+      Nope
+    </div> -->
+    <div class="ui positive right labeled icon button">
+     关闭
+      <i class="checkmark icon"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 这里是添加url_text弹出层 -->
+
+<div id = 'add-title-modal' class="ui modal">
+  <i class="close icon"></i>
+  <div class="header">
+    请填写标题
+  </div>
+  <div class=" content">
+ 
+    <div class="article ui form">
+      <input id="save_post_title-input" type="text" placeholder="输入标题...">
+      <button id="save_post-button" class="ui button">提交</button>
     </div>
   </div>
   <div class="actions">

@@ -68,6 +68,42 @@ class TerrySearch:
             
         writer.commit()
         pass
+
+    def add_one(self,file=''):
+        """添加一个文件索引
+        >>> add_one(path)
+        """
+        # schema = Schema(title=TEXT(stored=True), path=ID(stored=True), content=TEXT)
+        # ix = create_in("indexdir", schema)
+
+        #打开搜索
+        idx = open_dir("indexdir", indexname=INDEXNAME)  #读取建立好的索引  
+        writer = idx.writer()
+
+        #https://terry-toolkit.terrychan.org/zh/master/Terry_toolkit.file/#Terry_toolkit.file.File.file_List
+
+        try:
+            text = Terry_toolkit.File().open_file(item)
+
+            
+            # seg_list = jieba.cut_for_search(text)  # 搜索引擎模式
+            # # print(", ".join(seg_list))
+            # text_fenci=" ".join(seg_list)
+            # print(text_fenci)
+            # print("标题:"+text[0:30])
+            writer.add_document(title=text[0:30] , path=item,
+                                content=text)
+            if i%10000 == 0:
+                #每10000次提交一次
+                writer.commit()
+                writer = idx.writer()
+        except:
+            pass
+            
+
+            
+        writer.commit()
+        pass
     def search(self,text='',limit=10):
         """搜索内容 自动分词
         >>> search(text)

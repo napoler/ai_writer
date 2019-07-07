@@ -112,6 +112,7 @@ class UrlText:
                 logging.info('加载成功网页: '+driver.title)
                 html = driver.page_source #浏览器中elements的内容
             except:
+                logging.info('加载网页失败: '+url)
                 return False
             finally:
 

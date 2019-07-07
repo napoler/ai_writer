@@ -4,6 +4,7 @@ from whoosh.fields import *
 from whoosh.qparser import QueryParser
 from whoosh.index import open_dir
 import jieba
+jieba.load_userdict("libs/userdict.txt")
 from jieba.analyse import ChineseAnalyzer
 from tqdm import tqdm
 # indexname

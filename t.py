@@ -1,98 +1,60 @@
-# # # from libs import TerrySearch
-# # # from libs import TerrySearch
-# # import libs
-# # import fun
+from fun import *
+import json
+import libs
+from MicroHMM.hmm import HMMModel
 
-
-# # baiduai= libs.BaiduAi()
-
-# # title = "但性格非常稳健，完全没有一般 "
-
-# # content = """
-
-# # 1、发情母犬的阴唇肿胀、肥大、外突、初期粉红色，明显充血并有少量黏液伴随血液从母犬的阴道流出。随着发情期的延续，流出的血量逐日增加，血液的颜色也由粉红色变为深红色：发情的第8天，血量最多最浓，血色最深。第9天以后血量渐少，浓度渐稀，这时阴唇也逐渐变为暗红色。由于这时阴唇肿胀渐消，开始出现皱纹，发情的母犬进入了排卵期。排卵期大约持续5—6天，这时的发情母犬乐意接受公犬爬跨。随着排卵期的延伸，发情母犬的求爱表现日炽，直到发情期的第16天，母犬开始讨厌公犬纠缠、这时发情母犬的阴道仍有血水流出，到第21天时，阴道流血停止，阴唇肿胀消退，母犬发情结束。
-# # 2、发情期母犬表情兴奋。随着发情期的持续，母犬的兴奋增强，表情比平时恍惚不安，吠声粗大，双目发亮。发情炽期，母犬坐卧不安，食欲锐减，拴养的母犬不断对空发出求偶吠，养犬者这时如果用手按压母犬的腰部或抚摸犬尾时，母犬站立不动，或把犬尾偏向一侧，犬的阴唇不断抽动，并且阴门频频开启和闭合，这时如用性成熟的公犬试情时，发情的母犬后肢叉开，出现主动接受交配状。养犬者在犬的发情期，一定要密切观察发情母犬的上述变化和表情，一定要记住母犬发情开始（母犬阴道流血第一天）的日子，以便推算出该母犬最佳的交配日：只有在最佳交配日配种，才能提高母犬的受胎率和产仔数。
-# # 最佳配种日和配种
-
-# # """
-
-
-# # t = baiduai.topic(title,content)
-# # print(t)
-# # # t = baiduai.commentTag(content)
-# # # print(t)
-
-
-# # # -*- coding:utf-8 -*-
-# # Author：wancong
-# # Date: 2018-04-29
-# from pyhanlp import *
-
-
-# def demo_dependency_parser():
-#     """ 依存句法分析（CRF句法模型需要-Xms512m -Xmx512m -Xmn256m，
-#         MaxEnt和神经网络句法模型需要-Xms1g -Xmx1g -Xmn512m）
-#         https://github.com/hankcs/pyhanlp
-#     """
-#     sentence = HanLP.parseDependency("独立自己爱思考，加上无忧无虑爱冒险，可以很负责任的说，哈士奇是班级里成绩好，但不听老师管教的学生。")
-# #     print(dir())
-# #     for word in sentence.iterator():  # 通过dir()可以查看sentence的方法
-# # #         print(word.ID)
-# # #         print(word.HEAD.ID)
-# #         print((word.ID,word.LEMMA, word.DEPREL, word.HEAD.LEMMA,word.POSTAG,word.HEAD.ID))
-# #     print()
-
-#     # 也可以直接拿到数组，任意顺序或逆序遍历
-#     word_array = sentence.getWordArray()
-#     CoNLLWord = JClass("com.hankcs.hanlp.corpus.dependency.CoNll.CoNLLWord")
-#     i= 0 
-#     for word in word_array:
-# #         print("%s --(%s)--> %s" % (word.LEMMA, word.DEPREL, word.HEAD.LEMMA))
-#         print((i,word.LEMMA, word.DEPREL, word.HEAD.LEMMA,word.POSTAG,word.HEAD.ID))
-
-#         # head = word
-#         # while head.HEAD:
-#         #     head = head.HEAD
-#         #     if (head == CoNLLWord.ROOT):
-#         #         print(head.LEMMA)
-#         #     else:
-#         #         print("%s --(%s)--> " % (head.LEMMA, head.DEPREL))
-
-
-#         i=i+1
+from tqdm import tqdm
+def train():
+    model_dir_str="data/hmm"
+    hmm_model = HMMModel()
+    output='/home/terry/pan/github/Bert-Sentence-streamlining/Bert-Sentence-streamlining/data/train_old.json'
+    with open(output,'r') as f:
         
-#         pass
-#     print(len(word_array))
-
-#     # 还可以直接遍历子树，从某棵子树的某个节点一路遍历到虚根
-#     CoNLLWord = JClass("com.hankcs.hanlp.corpus.dependency.CoNll.CoNLLWord")
-#     head = word_array[0]
-#     while head.HEAD:
-#         head = head.HEAD
-#         if (head == CoNLLWord.ROOT):
-#             print(head.LEMMA)
-#         else:
-#             print("%s --(%s)--> " % (head.LEMMA, head.DEPREL))
-
-#     # 还可以直接遍历子树，从某棵子树的某个节点一路遍历到虚根
-#     CoNLLSentence = JClass("com.hankcs.hanlp.corpus.dependency.CoNll.CoNLLSentence")
-#     # head = word_array[0]
-#     # while head.HEAD:
-#     #     head = head.HEAD
-#     #     if (head == CoNLLSentence.ROOT):
-#     #         print(head.LEMMA)
-#     #     else:
-#     #         print("%s --(%s)--> " % (head.LEMMA, head.DEPREL))
-# if __name__ == "__main__":
-#     demo_dependency_parser()
-# #     import doctest
-# #     doctest.testmod(verbose=True, optionflags=doctest.NORMALIZE_WHITESPACE)
+        items=[]
+        for line in tqdm(f):
+            j_content = json.loads(line)
+            if j_content['label']=="Yes":
+                items.append(j_content)
+                one_line=bulid_mark(j_content['sentence'])
+                # print(j_content['sentence'])
+                # print(one_line)
+                hmm_model.train_one_line(one_line)
+        hmm_model.save_model(model_dir_str)
+    text="它们的岗位，一只边牧可以管理上千头羊群呢，它们为主人忠心耿耿的守护着家畜，守护着家园"
+    s=jieba_seg_list(text)
+    result = hmm_model.predict(s)
+    print(result)
+    print(hmm_model)
 
 
+def load():
+    model_dir_str="data/hmm"
+    
+    # hmm_model = HMMModel()
+    hmm_model =HMMModel.load_model(model_dir=model_dir_str)
+    print(hmm_model)
+    text="它们"
+    s=jieba_seg_list(text)
+    result = hmm_model.predict(s)
+    print(result)
+# train()
 
-import os, subprocess as sp, json
-source = 'source init_env'
-dump = '../bin/python3 -c "import os, json;print json.dumps(dict(os.environ))"'
-pipe = sp.Popen(['/bin/bash', '-c', '%s && %s' %(source,dump)], stdout=sp.PIPE)
-env = json.loads(pipe.stdout.read())
-os.environ = env
+load()
+
+# hmm_model = HMMModel()
+# # one_line = [('当然', 'No'), ('了', 'Yes'), ('，', 'No'), ('依然', 'No'), ('还有', 'No'), ('不少', 'No'), ('的', 'No'), ('边境牧羊犬', 'No'), ('活跃', 'No'), ('在', 'No'), ('野外', 'No'), ('、', 'No'), ('牧场', 'No'), ('，', 'No'), ('在', 'No'), ('那些', 'No'), ('畜牧业', 'No'), ('发达', 'No'), ('的', 'No'), ('国家', 'No'), ('，', 'No'), ('坚守', 'No'), ('着', 'No'), ('它们', 'No'), ('的', 'No'), ('岗位', 'No'), ('，', 'No'), ('一只', 'No'), ('边牧', 'No'), ('可以', 'No'), ('管理', 'No'), ('上', 'No'), ('千头', 'No'), ('羊群', 'No'), ('呢', 'Yes'), ('，', 'No'), ('它们', 'No'), ('为主', 'No'), ('人', 'No'), ('忠心耿耿', 'No'), ('的', 'No'), ('守护', 'No'), ('着', 'No'), ('家畜', 'No'), ('，', 'No'), ('守护', 'No'), ('着', 'No'), ('家园', 'No')]
+# text1="""
+
+# ##del##西伯利亚##del##雪橇犬是原始的古老犬种，主要生活在在西伯利亚##del##东北部##del##、格陵兰南部。哈士奇名字是源自其独特的嘶哑叫声 [1]  。哈士奇性格多变，有的极端胆小，也有的极端暴力，进入人类社会和家庭的哈士奇，都已经没有了这种极端的性格，比较温顺，是一种流行于全球的宠物犬。哈士奇、金毛犬与拉布拉多并列为三大无攻击性犬类 [2]  ，被世界各地人们广泛饲养，并在全球范围内有大量该犬种的赛事。
+# """
+# one_line=bulid_mark(text1)
+# hmm_model.train_one_line(one_line)
+# print(hmm_model)
+# # text="当然了，依然还有不少的边境牧羊犬活跃在野外、牧场，在那些畜牧业发达的国家，坚守着它们的岗位，一只边牧可以管理上千头羊群呢，它们为主人忠心耿耿的##del##守护##del##着家畜，守护着家园"
+# text="""
+# ##del##
+# 西伯利亚雪橇犬是原始的古老犬种，主要生活在在西伯利亚东北部、格陵兰南部。哈士奇名字是源自其独特的嘶哑叫声 [1]  。哈士奇性格多变，有的极端胆小，也有的极端暴力，进入人类社会和家庭的哈士奇，都已经没有了这种极端的性格，比较温顺，是一种流行于全球的宠物犬。哈士奇、金毛犬与拉布拉多并列为三大无攻击性犬类 [2]  ，被世界各地人们广泛饲养，并在全球范围内有大量该犬种的赛事。
+# """
+# s=jieba_seg_list(text)
+# result = hmm_model.predict(s)
+# print(result)

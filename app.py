@@ -63,6 +63,27 @@ def json_save_post():
     
     return jsonify(d)
 
+
+@app.route("/json/auto_sort", methods=['GET', 'POST'])
+def json_auto_sort():
+    """
+    进行文章排序
+
+    """
+    data= get_post_data()
+    print('data',data)
+    text = data['text']
+    aid = data['aid']
+    run_auto_sort(text,aid)
+    d={'state':True
+    }
+    
+    return jsonify(d)
+
+
+
+
+
 @app.route("/json/get/post", methods=['GET', 'POST'])
 def json_get_post():
     """
@@ -506,7 +527,7 @@ def json_sentence_fenci_update():
     # libs_text= libs.Text()
     text1_pseg  =libs.Text().text_part_pseg(text1)
     text2_pseg  =libs.Text().text_part_pseg(text2)
-    file_pseg_write_obj = open("data/corpus_pseg.txt", 'a')
+    file_pseg_write_obj = open("./data/mark/corpus_pseg.txt", 'a')
     #python2可以用file替代open
     # for var in mylist:
     text_pseg = text1_pseg+"\n"+text2_pseg+"\n\n"
@@ -515,7 +536,7 @@ def json_sentence_fenci_update():
 
 
     #保存训练数据
-    file_write_obj = open("data/corpus.txt", 'a')
+    file_write_obj = open("./data/mark/corpus.txt", 'a')
     #python2可以用file替代open
     # for var in mylist:
     text = text1+"\n"+text2+"\n\n"
@@ -525,8 +546,6 @@ def json_sentence_fenci_update():
     # #随机产生一条
     # random_sentence_one()
 
-    # 添加一条标记数据
-    add_sentence_one(text2)
 
         #先写入columns_name
         # writer.writerow(["index","a_name","b_name"])
@@ -535,6 +554,8 @@ def json_sentence_fenci_update():
 
     file_write_obj.close()
 
+    # 添加一条标记数据
+    add_sentence_one(text2)
     return jsonify('')
 
 

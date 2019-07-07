@@ -25,6 +25,36 @@
   <!-- https://johnny.github.io/jquery-sortable/ -->
 
   <script>
+
+
+ //获取url中的参数
+ function getUrlParam(name) {
+            // var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+            // var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+            // if (r != null) return unescape(r[2]); return null; //返回参数值
+
+
+            var url = window.location.search; //获取url中"?"符后的字串   
+       var theRequest = new Object();   
+       if (url.indexOf("?") != -1) {   
+          var str = url.substr(1);   
+          strs = str.split("&");   
+          for(var i = 0; i < strs.length; i ++) {   
+              //就是这句的问题
+             theRequest[strs[i].split("=")[0]]=decodeURI(strs[i].split("=")[1]); 
+             //之前用了unescape()
+             //才会出现乱码  
+          }   
+       }   
+       return theRequest[name];  
+
+        }
+
+
+
+
+
+
     $(function () {
 
       var group = $("ol.serialization").sortable({
@@ -1056,28 +1086,6 @@ setInterval(function() {
     // refresh list
     save_post()
 }, 120000)
- //获取url中的参数
- function getUrlParam(name) {
-            // var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
-            // var r = window.location.search.substr(1).match(reg);  //匹配目标参数
-            // if (r != null) return unescape(r[2]); return null; //返回参数值
-
-
-            var url = window.location.search; //获取url中"?"符后的字串   
-       var theRequest = new Object();   
-       if (url.indexOf("?") != -1) {   
-          var str = url.substr(1);   
-          strs = str.split("&");   
-          for(var i = 0; i < strs.length; i ++) {   
-              //就是这句的问题
-             theRequest[strs[i].split("=")[0]]=decodeURI(strs[i].split("=")[1]); 
-             //之前用了unescape()
-             //才会出现乱码  
-          }   
-       }   
-       return theRequest[name];  
-
-        }
 
  
 
@@ -1336,7 +1344,7 @@ function nlp(text){
 
       $(document).on('click', '#used', function () {
         // 标记文章已经发布
-        id=getUrlParam('id')
+        var id=getUrlParam('id')
         $.get(
         "/json/move_used",
         {
@@ -1802,6 +1810,46 @@ function add_url(url){
     }
 
 
+
+  // 点击文章自动 排序
+$(document).on('click', '#auto_sort', function () {
+
+// var text= $('#edit-list').text()
+var text=''
+$('#edit-list li').each(function () {
+
+           text = text+$(this).text()+'。';
+        
+        });
+       var id =getUrlParam('id')
+get_auto_sort(text,id) 
+
+
+})
+
+function get_auto_sort(text,id) {
+
+
+$.post("/json/auto_sort", { 'aid': id, 'text': text  })
+  .done(function (data) {
+    // alert( "Data Loaded: " + data );
+    console.log(data)
+    location.reload();
+  });
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
     function get_next_sentence_p(text, juzi) {
 
 
@@ -2251,6 +2299,7 @@ background: #ef9b9b;
             <button id="add_juzi_edit_btn" class="ui green button">添加语句</button>
             <button id="show_add_url" class="ui green button">添加素材</button>
             <button id="used" class="ui green button">标记使用</button>
+            <button id="auto_sort" class="ui green button">Ai排序</button>
             <a href="/p/edit"  class="ui green button">创建内容</a>
             
           </div>

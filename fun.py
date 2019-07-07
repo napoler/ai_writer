@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, json, Response, jsonify
 import jieba
+jieba.load_userdict("libs/userdict.txt")
 import sqlite3
 import csv,re
 import Terry_toolkit as tkit
@@ -11,7 +12,64 @@ import subprocess
 import hashlib
 import time
 import shutil
+from bert_sample import SentencePrediction,MaskedLM
+import configparser
+config = configparser.ConfigParser()
+
+config.read("./config/config.ini")
+
+from random import sample
 # from MagicBaidu import MagicBaidu
+
+def run_auto_sort(text,id):
+    cmd="python3 bert_run_jianxie.py --do auto_sort --id "+id+" --text "+text
+
+    e = subprocess.call(cmd, shell=True)
+    return e 
+# def auto_sort(text,id):
+#     nextS=SentencePrediction()
+#     mod= config.get('bert', 'model')
+#     nextS.model_init(model=mod)
+#     t_text=tkit.Text()
+#     text_list=t_text.sentence_segmentation(text)
+#     print(text_list)
+#     text_list_mini=t_text.sentence_segmentation(text)
+#     # new_text='。'.join(text_list_mini)
+#     # print('new_text',new_text)
+#     l=[]
+#     next_s=random.choice(text_list)
+#     Article=next_s
+#     print('文章开始:+++++++++++++')
+#     for i in range(0,len(text_list)):
+#         # print(line)
+#         print(next_s)
+
+#         if len(text_list_mini)>1:
+#             text_list_mini.remove(next_s)
+#             new_text='。'.join(text_list_mini)
+#             # print('new_text',new_text)
+#             next_line=nextS.sentence(new_text,next_s)
+#             # print(next_line)
+#             if len(next_line)>0:
+#                 next_s=next_line[0]['line_to_check']
+#                 # print(next_s)
+#                 # l.append(next_line[0])
+#                 Article=Article+'。'+next_s
+
+#         elif len(text_list_mini)==1:
+#             Article=Article+'。'+text_list_mini[0]+'。'
+#             break
+
+#             # l.append(next_line[0])
+#     # print(l)
+#     # data ={
+#     #     'start':next_s
+#     #     'next':sentence
+#     # }
+#     # print(Article)
+#     save_article_plus(Article,id)
+#     return 
+#     pass
 
 def baidu_search(keyword):
     # mb = MagicBaidu()
@@ -146,8 +204,38 @@ def move_used(id):
     used= './data/article_used'
     shutil.move(articlefile, used)  # 移动
     return 
-def add_sentence_one(text):
+def bulid_mark(text):
     """添加一条数据"""
+    tfile =  tkit.File()
+    t_text=tkit.Text()
+    # print(text)
+
+    p=re.compile(r'[##del##](.*?)[##del##]',re.S)
+    words= re.findall(p, text)
+    # 获取标记后的关键词
+    words = remove_null(words)
+    # s=re.split(r'##del##',text)
+    # text= ''.join(s)
+    text= text.replace("##del##", "")
+
+    # for word in words:
+    seg_list=jieba_seg_list(text)
+    # print(seg_list)
+    new=[]
+    for i,item in enumerate(seg_list):
+        # print(item)
+        s=jieba_seg_list(text)
+        calculate='No'
+        while item in words:
+            words.remove(item)
+            calculate='Yes'
+        # s[i]=(item,calculate)
+        new.append((item,calculate))
+    return new
+
+     
+def add_sentence_one_unmark(text):
+    """添加一条未标记的数据"""
     tfile =  tkit.File()
     t_text=tkit.Text()
     print(text)
@@ -163,17 +251,37 @@ def add_sentence_one(text):
     # for word in words:
     seg_list=jieba_seg_list(text)
     print(seg_list)
+    seg_list_unmark=seg_list
+    print('words',words)
+    for word in words:
+        try:
+            seg_list_unmark.remove(word)
+        except:
+            print('无法移除',word)
+            pass
+    
+
+    seg_list_unmark_mini=sample(seg_list_unmark, len(words)) # 随机抽取和已经标记相同数目的样本
+    print('seg_list_unmark_mini',seg_list_unmark_mini)
     for i,item in enumerate(seg_list):
-        print(item)
+        # print(item)
         s=jieba_seg_list(text)
         s2=jieba_seg_list(text) #第二种
-        calculate='No'
-        while item in words:
+        calculate='ignore'
+
+        #这里是抽取未标记的生成
+        while item in seg_list_unmark_mini:
             # s=re.split(r'##del##',text)
             # print('s',s)
-            words.remove(item)
-            calculate='Yes'
-        # if calculate=='Yes':
+            seg_list_unmark_mini.remove(item)
+            calculate='No'
+
+        # while item in words:
+        #     # s=re.split(r'##del##',text)
+        #     # print('s',s)
+        #     words.remove(item)
+        #     calculate='Yes'
+        # # if calculate=='Yes':
 
         # else:
         # new= ch_one(item,s)
@@ -186,25 +294,244 @@ def add_sentence_one(text):
             'sentence':''.join(s)
 
         }
-        print(data)
-        if calculate=='No':
-            # 未标记数据
-            libs.Terry().c_inputfile('/home/terry/pan/github/Bert-Sentence-streamlining/Bert-Sentence-streamlining/data/train.json',data)
-            pass
-        else:
-            libs.Terry().c_inputfile('/home/terry/pan/github/Bert-Sentence-streamlining/Bert-Sentence-streamlining/data/train.json',data)
-
         data2={
             'label':calculate,
             'sentence':''.join(s2)
 
         }
+        # print(data)
+        if calculate=='ignore' :
+            # 未选择忽略
+            # libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',data)
+            pass
+        else:
+            libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',data)
+            # print(data)
+            libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train_v2.json',data2)
+
+
+def replace_mark(words,text):
+    """
+    生成标记词语
+    """
+    new=[]
+    for word in words:
+        t= text.replace("##del##"+word+"##del##", "[mark]"+word+"[mark]").replace("##del##", "").replace("[mark]"+word+"[mark]", "##del##"+word+"##del##")
+        new.append(t)
+    # print(new)
+    text_clear= text.replace("##del##", "")
+
+
+    seg_list=jieba_seg_list(text_clear)
+    s_list=[]
+    m_list=[]
+    for i,item in enumerate(seg_list):
+        s=jieba_seg_list(text_clear)
+        s[i]="##del##"+item+"##del##"
+        calculate="No"
+        while ''.join(s) in new:
+            calculate="Yes"
+            # print("标记内容")
+            break
+
+        data={
+            'label':calculate,
+            'sentence':''.join(s)
+
+        }
+        if calculate=="Yes":
+            m_list.append(data)
+        else:
+            s_list.append(data)
         print(data)
-        libs.Terry().c_inputfile('/home/terry/pan/github/Bert-Sentence-streamlining/Bert-Sentence-streamlining/data/train_v2.json',data2)
-    #随机产生一条
+        # libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',data)
+        #随机产生一条
+        # random_sentence_one()
+    last={
+        'mark':m_list,
+        'unmark':s_list
+        
+    }
+
+    return last
+def add_sentence_one(text):
+    """添加一条数据"""
+    tfile =  tkit.File()
+    t_text=tkit.Text()
+    print(text)
+
+    p=re.compile(r'[##del##](.*?)[##del##]',re.S)
+    words= re.findall(p, text)
+    # 获取标记后的关键词
+    words = remove_null(words)
+    ls= replace_mark(words,text)
+    mark_list= ls['mark']
+    # if len(ls['unmark'])>len(ls['mark']):
+    #     unmark_list=sample(ls['unmark'], len(ls['mark']))
+    # else:
+    #     unmark_list=ls['unmark']
+    unmark_list=ls['unmark']
+    new_list=mark_list+unmark_list
+    for item in new_list:
+        libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',item)
+                #随机产生一条
+        # random_sentence_one()
+
+
+
+
+
+
+
+
+
+    # text= text.replace("##del##", "")
+
+    # # for word in words:
+    # seg_list=jieba_seg_list(text)
+    # print(seg_list)
+    # seg_list_unmark=seg_list
+    # print('words',words)
+    # for word in words:
+    #     try:
+    #         seg_list_unmark.remove(word)
+    #     except:
+    #         print('无法移除',word)
+    #         pass
+
+    # seg_list_unmark_mini=sample(seg_list_unmark, len(words)) # 随机抽取和已经标记相同数目的样本
+    # print('seg_list_unmark_mini',seg_list_unmark_mini)
+
+
+    # for i,item in enumerate(seg_list):
+    #     print(item)
+    #     s=jieba_seg_list(text)
+    #     s2=jieba_seg_list(text) #第二种
+    #     calculate='ignore'
+
+    #     #这里是抽取未标记的生成
+    #     while item in seg_list_unmark_mini:
+    #         # s=re.split(r'##del##',text)
+    #         # print('s',s)
+    #         seg_list_unmark_mini.remove(item)
+    #         calculate='No'
+
+    #     while item in words:
+    #         # s=re.split(r'##del##',text)
+    #         # print('s',s)
+    #         words.remove(item)
+    #         calculate='Yes'
+    #     # if calculate=='Yes':
+
+    #     # else:
+    #     # new= ch_one(item,s)
+    #     s[i]="##del##"+item+"##del##"
+    #     s2[i]="###" #第二种
+    #     # del(s)
+    #     # print(new)
+    #     data={
+    #         'label':calculate,
+    #         'sentence':''.join(s)
+
+    #     }
+    #     data2={
+    #         'label':calculate,
+    #         'sentence':''.join(s2)
+
+    #     }
+    #     print(data)
+    #     if calculate=='ignore' :
+    #         # 未选择忽略
+    #         # libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',data)
+    #         pass
+    #     else:
+    #         libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',data)
+    #         # print(data)
+    #         libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train_v2.json',data2)
+    # #随机产生一条
     # random_sentence_one()
 
 
+# def add_sentence_one(text):
+#     """添加一条数据"""
+#     tfile =  tkit.File()
+#     t_text=tkit.Text()
+#     print(text)
+
+#     p=re.compile(r'[##del##](.*?)[##del##]',re.S)
+#     words= re.findall(p, text)
+#     # 获取标记后的关键词
+#     words = remove_null(words)
+#     # s=re.split(r'##del##',text)
+#     # text= ''.join(s)
+#     text= text.replace("##del##", "")
+
+#     # for word in words:
+#     seg_list=jieba_seg_list(text)
+#     print(seg_list)
+#     seg_list_unmark=seg_list
+#     print('words',words)
+#     for word in words:
+#         try:
+#             seg_list_unmark.remove(word)
+#         except:
+#             print('无法移除',word)
+#             pass
+    
+#     replace_mark(words,text)
+#     seg_list_unmark_mini=sample(seg_list_unmark, len(words)) # 随机抽取和已经标记相同数目的样本
+#     print('seg_list_unmark_mini',seg_list_unmark_mini)
+
+
+#     for i,item in enumerate(seg_list):
+#         print(item)
+#         s=jieba_seg_list(text)
+#         s2=jieba_seg_list(text) #第二种
+#         calculate='ignore'
+
+#         #这里是抽取未标记的生成
+#         while item in seg_list_unmark_mini:
+#             # s=re.split(r'##del##',text)
+#             # print('s',s)
+#             seg_list_unmark_mini.remove(item)
+#             calculate='No'
+
+#         while item in words:
+#             # s=re.split(r'##del##',text)
+#             # print('s',s)
+#             words.remove(item)
+#             calculate='Yes'
+#         # if calculate=='Yes':
+
+#         # else:
+#         # new= ch_one(item,s)
+#         s[i]="##del##"+item+"##del##"
+#         s2[i]="###" #第二种
+#         # del(s)
+#         # print(new)
+#         data={
+#             'label':calculate,
+#             'sentence':''.join(s)
+
+#         }
+#         data2={
+#             'label':calculate,
+#             'sentence':''.join(s2)
+
+#         }
+#         print(data)
+#         if calculate=='ignore' :
+#             # 未选择忽略
+#             # libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',data)
+#             pass
+#         else:
+#             libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',data)
+#             # print(data)
+#             libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train_v2.json',data2)
+#     #随机产生一条
+#     random_sentence_one()
+
+
     # for word in words:
     #     #随机产生一条
     #     random_sentence_one()
@@ -218,7 +545,7 @@ def add_sentence_one(text):
 
     #     }
     #     print(data)
-    #     libs.Terry().c_inputfile('/home/terry/pan/github/Bert-Sentence-streamlining/Bert-Sentence-streamlining/data/train.json',data)
+    #     libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',data)
     # for word in words:
     #     #随机产生一条
     #     random_sentence_one()
@@ -232,7 +559,7 @@ def add_sentence_one(text):
 
     #     }
     #     print(data)
-    #     libs.Terry().c_inputfile('/home/terry/pan/github/Bert-Sentence-streamlining/Bert-Sentence-streamlining/data/train.json',data)
+    #     libs.Terry().c_inputfile('/home/terry/github/ai_writer/ai_writer/data/mark/train.json',data)
 def ch_one(word,list):
     """替换元素"""
     for i,item in enumerate(list):
@@ -441,7 +768,7 @@ def run_cmd(cmd,inputfile,output):
     """
     # my_env = {**os.environ, 'PATH': '../bin/:/usr/sbin:/sbin:' + os.environ['PATH']}
     # subprocess.Popen(['source ','../bin/activate'],shell=True)
-    # e = subprocess.call(cmd, shell=True,env={'PATH':'../bin'})
+    e = subprocess.call(cmd, shell=True)
 
 
     # e = subprocess.Popen(cmd, shell=True,env=my_env).wait()
@@ -450,7 +777,7 @@ def run_cmd(cmd,inputfile,output):
     # p.communicate("python something.py\nexit") # pass commands to the opened shell 
     # # e = subprocess.Popen([python_bin, script_file])
     # print(e)
-    e=os.system('. ../bin/activate &&'+cmd) 
+    # e=os.system('. ../bin/activate &&'+cmd) 
 
     if e==0:
         print("执行成")

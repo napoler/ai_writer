@@ -18,6 +18,10 @@ import random
 import gc
 import subprocess
 from fun import *
+import configparser
+config = configparser.ConfigParser()
+
+config.read("./config/config.ini")
 
 def prediction(text):
     """
@@ -93,7 +97,7 @@ def run ():
     # output 输出路径
     parser.add_argument('--text', type=str, default = None)
 
-
+    parser.add_argument('--id', type=str, default = None)
 
     parser.add_argument('--url', type=str, default = None)
     # # --content 内容
@@ -115,16 +119,67 @@ def run ():
         # 执行预测
 
         run_baidu(args.output,args.text)
+
+    if args.do == 'auto_sort':
+        # 执行预测
+
+        auto_sort(args.text,args.id)
+def auto_sort(text,id):
+    nextS=SentencePrediction()
+    mod= config.get('bert', 'model')
+    nextS.model_init(model=mod)
+    t_text=tkit.Text()
+    text_list=t_text.sentence_segmentation(text)
+    print(text_list)
+    text_list_mini=t_text.sentence_segmentation(text)
+    # new_text='。'.join(text_list_mini)
+    # print('new_text',new_text)
+    l=[]
+    next_s=random.choice(text_list)
+    Article=next_s
+    print('文章开始:+++++++++++++')
+    for i in range(0,len(text_list)):
+        # print(line)
+        print(next_s)
+
+        if len(text_list_mini)>1:
+            text_list_mini.remove(next_s)
+            new_text='。'.join(text_list_mini)
+            # print('new_text',new_text)
+            next_line=nextS.sentence(new_text,next_s)
+            # print(next_line)
+            if len(next_line)>0:
+                next_s=next_line[0]['line_to_check']
+                # print(next_s)
+                # l.append(next_line[0])
+                Article=Article+'。'+next_s
+
+        elif len(text_list_mini)==1:
+            Article=Article+'。'+text_list_mini[0]+'。'
+            break
+
+            # l.append(next_line[0])
+    # print(l)
+    # data ={
+    #     'start':next_s
+    #     'next':sentence
+    # }
+    # print(Article)
+    save_article_plus(Article,id)
+    return 
+    pass
+
+
 def run_baidu(output,keyword):
     print("已经运行来")
     # data= url_text(url)
     bsearch = libs.BaiduSearch()
-    data,kws = bsearch.search(keyword=keyword,num = 1)
+    data,kws = bsearch.search(keyword=keyword,num = 0)
     print(data,kws)
     with open(output,"w") as f:
         json.dump(data,f)
         print("保存获取url内容到:"+output)
-    pass
+    return
 def run_url_text(output,url):
     print("已经运行来")
     data= url_text(url)
@@ -132,7 +187,7 @@ def run_url_text(output,url):
     with open(output,"w") as f:
         json.dump(data,f)
         print("保存获取url内容到:"+output)
-    pass
+    return
 
 
 def jianxie(model,output,text):
@@ -150,13 +205,13 @@ def jianxie(model,output,text):
         # print(item)
 
         t =cf.prediction(item)
-
+        print('\n删除:'+word_list[i],t[0])
 
         # print()
-        print(t)
+        # print('t',t)
         r= word_list[i]
         if t[0]==0 :
-            print('\n删除:'+word_list[i])
+            # print('\n删除:'+word_list[i],t[0])
             # while r in word_list:
             #     word_list.remove(r)
             word ={

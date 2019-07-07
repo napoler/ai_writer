@@ -35,8 +35,8 @@ class BaiduSearch:
                 logging.info(n)
                 if len(next_url) >10:
                     t = random.randint(1,5)
-                    logging.info('搜索结束休息中 '+str(t)+'s')
-                    time.sleep(1)
+                    # logging.info('搜索结束休息中 '+str(t)+'s')
+                    # time.sleep(1)
                     try:
                         s_data = self.search_next(keyword,s_data['next_url'])
                     except:

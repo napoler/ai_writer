@@ -1,4 +1,5 @@
 import jieba.posseg as pseg
+
 class Text:
   def text_part_speech(self,text):
     words = pseg.cut(text)

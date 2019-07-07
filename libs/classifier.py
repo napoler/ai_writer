@@ -88,7 +88,8 @@ class Classifier:
     #     k = logits.view(-1, 2)
         logits.detach().cpu().numpy()
         n = logits.detach().cpu().numpy()
-        print(n)
+        print('聚类logits:',n)
+
         preds = np.argmax(n, axis=1)
         # ["Yes", "No"]
         return preds

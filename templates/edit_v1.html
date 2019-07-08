@@ -26,7 +26,61 @@
 
   <script>
 
+ 
+function save_post(){
 
+// 保存编辑的文档
+var text= ''
+// var id = getUrlParam('id')
+var title = $("#save_post_title-input").val()
+  console.log('title:'+title)
+
+  
+  id=title
+  if (id.length == 0) 
+{ 
+// alert('输入标题保存'); 
+
+$('#add-title-modal').modal('show');
+
+return ''
+}
+console.log(id)
+
+window.history.pushState({},0,'http://'+window.location.host+'/p/edit?id='+id);   
+// if (id ==null){
+ 
+//   // id = new Date().getTime();
+//   // id = new Date().toUTCString();
+//   window.history.pushState({},0,'http://'+window.location.host+'/p/edit?id='+id);      
+// }
+
+if (id.length == 0) 
+{ 
+// alert('输入标题保存'); 
+$('#add-title-modal').modal('show');
+}
+
+$("#edit-list li").each(function ( index,element){
+  var it= $(this).text()
+  text= text+it+'。\n'
+
+  
+})
+
+$.post("/json/save/post", { 'id': id, 'text': text })
+  .done(function (data) {
+    // alert( "Data Loaded: " + data );
+    console.log(data)
+    if (data.state) {
+      $("#msg").html('已经保存!')
+    }
+    console.log("已经保存!")
+    // $("#msg").html(data.msg)
+    $('#add-title-modal').modal('hidden');
+  });
+
+}
  //获取url中的参数
  function getUrlParam(name) {
             // var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
@@ -154,7 +208,8 @@ save_post()
 
 $(document).on('click', '#save_post', function () {
 // 手动保存
-save_post()
+// save_post()
+$('#add-title-modal').modal('show');
  
 })
 // 获取预测关键词
@@ -883,6 +938,17 @@ $(document).on('click', '#editing_juzi_edit_ppl .gm', function () {
 
 
 
+      // fenci_get获取Ai简写建议
+      $(document).on('click', '#fenci_get', function () {
+  
+              var text = $('#editing_juzi_edit').val();
+
+              // 执行句子简写预测
+              fenci_get (text)
+         
+
+
+      });
       // 点击切换开启编辑dblclick
       $(document).on('click', '#edit-list li', function () {
         // #移除之前的状态
@@ -1024,60 +1090,7 @@ $(document).ready(function(){
   return ''
   }
 })
- 
-function save_post(){
 
-  // 保存编辑的文档
-  var text= ''
-  // var id = getUrlParam('id')
-  var title = $("#save_post_title-input").val()
-    console.log('title:'+title)
-
-    
-    id=title
-    if (id.length == 0) 
-  { 
-  // alert('输入标题保存'); 
-
-  $('#add-title-modal').modal('show');
-
-  return ''
-  }
-  console.log(id)
-
-  window.history.pushState({},0,'http://'+window.location.host+'/p/edit?id='+id);   
-  // if (id ==null){
-   
-  //   // id = new Date().getTime();
-  //   // id = new Date().toUTCString();
-  //   window.history.pushState({},0,'http://'+window.location.host+'/p/edit?id='+id);      
-  // }
-
-  if (id.length == 0) 
-  { 
-  // alert('输入标题保存'); 
-  $('#add-title-modal').modal('show');
-  }
-
-  $("#edit-list li").each(function ( index,element){
-    var it= $(this).text()
-    text= text+it+'。\n'
-
-    
-  })
-
-  $.post("/json/save/post", { 'id': id, 'text': text })
-    .done(function (data) {
-      // alert( "Data Loaded: " + data );
-      console.log(data)
-      if (data.state) {
-        $("#msg").html('已经保存!')
-      }
-      console.log("已经保存!")
-      // $("#msg").html(data.msg)
-    });
-
-}
       // 每 1000 毫秒执行 clock() 函数
 // var int=self.setInterval("save_post()",1000);
 // $('body').everyTime('1s',save_post);
@@ -1634,6 +1647,7 @@ function nlp(text){
 
    var url= $("#url_text-modal .url").val()
    var kwd= $("#url_text-modal .kwd").val()
+   var text= $("#url_text-modal .text").val()
    if(url.length>0){
     add_url(url)
    }
@@ -1642,7 +1656,9 @@ function nlp(text){
     baidu_kwd(kwd)
    }
 
-
+   if(text.length>0){
+    add_text(text)
+   }
 
 // $('#url_text-modal').modal('show');
 
@@ -1751,6 +1767,43 @@ function add_url(url){
 
 }
 
+function add_text(text){
+
+// 通过url获取素材
+$.get(
+"/json/add_text",
+{
+  'text': text,
+  // 'keyword': calculate_keyword,
+  // num: 10
+},
+function (data) {
+  // ...
+  console.log('搜索结果：', data)
+  $("#calculate_list_msg").html(data.msg)
+
+  item_html_v1(data.data)
+
+  var html = $("#slist > div.article:nth-child(1)").html()
+  
+  $("#url_text-modal .article").html(html)
+
+
+
+});
+
+
+
+}
+
+
+
+
+
+
+
+
+
     function calculate_items(items) {
       var otext=$("#editing_juzi_edit").val();
       // 创建预测列表 #calculate_list
@@ -1813,7 +1866,7 @@ function add_url(url){
 
   // 点击文章自动 排序
 $(document).on('click', '#auto_sort', function () {
-
+  save_post()
 // var text= $('#edit-list').text()
 var text=''
 $('#edit-list li').each(function () {
@@ -1822,10 +1875,28 @@ $('#edit-list li').each(function () {
         
         });
        var id =getUrlParam('id')
+
+       run_msg(title='Ai排序中',msg='稍等 完成后自动刷新!')
 get_auto_sort(text,id) 
 
 
 })
+
+function run_msg(title='',msg=''){
+  $("#run_msg").modal('show')
+  $("#run_msg .header").html(title)
+  $("#run_msg .content").html(msg)
+}
+
+ 
+  
+
+
+
+
+
+
+
 
 function get_auto_sort(text,id) {
 
@@ -1834,6 +1905,7 @@ $.post("/json/auto_sort", { 'aid': id, 'text': text  })
   .done(function (data) {
     // alert( "Data Loaded: " + data );
     console.log(data)
+    
     location.reload();
   });
 
@@ -2299,6 +2371,7 @@ background: #ef9b9b;
             <button id="add_juzi_edit_btn" class="ui green button">添加语句</button>
             <button id="show_add_url" class="ui green button">添加素材</button>
             <button id="used" class="ui green button">标记使用</button>
+            <button id="save_post" class="ui green button">保存</button>
             <button id="auto_sort" class="ui green button">Ai排序</button>
             <a href="/p/edit"  class="ui green button">创建内容</a>
             
@@ -2416,6 +2489,7 @@ background: #ef9b9b;
             <button id='addnext' class="ui yellow button">添加到之后</button>
             <button id='remove' class="ui olive button">删除</button> -->
             <button id='fenci_update' class="ui red button">add样本</button>
+            <button id='fenci_get' class="ui red button">Ai精简</button>
             <button id='nlp' class="ui green button">nlp</button>
             <button id='mask' class="ui green button">预测</button>
             <button id='gaicuo' class="ui green button">改错</button>
@@ -2632,10 +2706,12 @@ background: #ef9b9b;
   </div>
   <div class=" content">
  
-    <div class="article ui form">
+    <div class="article ui form actions">
+        <div class="field">
       <input id="save_post_title-input" type="text" placeholder="输入标题...">
-      <button id="save_post-button" class="ui button">提交</button>
-    </div>
+    </div> <div class="field">
+      <button id="save_post-button" class="ui positive right labeled icon button">提交</button>
+    </div></div>
   </div>
   <div class="actions">
     <!-- <div class="ui black deny button">
@@ -2652,6 +2728,24 @@ background: #ef9b9b;
 
 
 
+
+
+<!-- 这里是添加url_text弹出层 -->
+
+<div id = 'run_msg' class="ui modal">
+    <i class="close icon"></i>
+    <div class="header">
+      
+    </div>
+    <div class=" content">
+   
+ 
+    </div>
+    <div class="actions">
+    
+    </div>
+  </div>
+  
 
 
 

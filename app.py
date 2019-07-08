@@ -15,6 +15,7 @@ from bert_sample import SentencePrediction,MaskedLM
 import Terry_toolkit as tkit
 import configparser
 from fun import *
+import hashlib
 
 config = configparser.ConfigParser()
 
@@ -56,12 +57,17 @@ def json_save_post():
     # print('data',data)
     text = data['text']
     id =  data['id']
-
-    save_article_plus(text,id)
-    d={'state':True
-    }
-    
-    return jsonify(d)
+    key=terry_cache_key('json_save_post',text+str(id))
+    if cache.get(key) is None:
+        save_article_plus(text,id)
+        data={'state':True
+        }
+        # data={}
+        cache.set(key ,data)
+    else:
+        print('获取缓存')
+        data = cache.get(key)
+    return jsonify(data)
 
 
 @app.route("/json/auto_sort", methods=['GET', 'POST'])
@@ -74,11 +80,17 @@ def json_auto_sort():
     print('data',data)
     text = data['text']
     aid = data['aid']
-    run_auto_sort(text,aid)
-    d={'state':True
-    }
-    
-    return jsonify(d)
+    key=terry_cache_key('json_auto_sort',text+str(aid))
+    if cache.get(key) is None:    
+        run_auto_sort(text,aid)
+        data={'state':True
+        }
+        # data={}
+        cache.set(key ,data)
+    else:
+        print('获取缓存')
+        data = cache.get(key)
+    return jsonify(data)
 
 
 
@@ -360,6 +372,44 @@ def json_get_url():
         data = cache.get(key)
     return jsonify(data)
 
+
+
+@app.route("/json/add_text" ,methods=['GET', 'POST'])
+def json_add_text():
+    """添加文本素材
+    """
+    text = request.args.get('text')
+
+    key ='json_get_url'+text
+    if cache.get(key) is None:
+        # data=url_text(url)
+
+        r = tkit.Text().text_processing(text, num=5)
+    # print(data)
+    
+        data={'data':r,
+            'msg':'返回数据'
+        }
+
+        
+        cache.set(key ,data)
+    # data 
+    else:
+        print('获取缓存')
+        data = cache.get(key)
+    return jsonify(data)
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route("/json/search_baidu" ,methods=['GET', 'POST'])
 def json_search_baidu():
     """返回搜索json结果
@@ -396,13 +446,15 @@ def json_search():
     text = request.args.get('text')
     limit = request.args.get('limit')
     print(limit)
-    r= libs.TerrySearch().search(text=text,limit= int(limit))
-    # print(data)
-    # data={'data':r,
-    #     'msg':'返回数据'
-    # }
-    # data 
-    return jsonify(r)
+    key=terry_cache_key('json_search',text+str(limit))
+    if cache.get(key) is None:
+        data= libs.TerrySearch().search(text=text,limit= int(limit))
+        # data={}
+        cache.set(key ,data)
+    else:
+        print('获取缓存')
+        data = cache.get(key)
+    return jsonify(data)
 
 
 
@@ -463,26 +515,31 @@ def json_sentence_prediction():
     previous_line = data['sentence']
     print('paragraph',paragraph)
     print('previous_line',previous_line)
+    key=terry_cache_key('json_sentence_prediction',paragraph+previous_line)
+    if cache.get(key) is None:
+        if paragraph and previous_line:
+            nextS=SentencePrediction()
+            mod= config.get('bert', 'model')
+            nextS.model_init(model=mod)
+            # nextS.model_init()
+            next_line=nextS.sentence(paragraph,previous_line)
 
-    if paragraph and previous_line:
-        nextS=SentencePrediction()
-        mod= config.get('bert', 'model')
-        nextS.model_init(model=mod)
-        # nextS.model_init()
-        next_line=nextS.sentence(paragraph,previous_line)
+            #释放内存
+            nextS.free_ram()
+            del nextS
+            gc.collect()
+            # print(len(next_line))
+            # print('next_line',next_line[:10])
+            # data=next_line[:10].tolist()
+            data={'data':next_line}
 
-        #释放内存
-        nextS.free_ram()
-        del nextS
-        gc.collect()
-        # print(len(next_line))
-        # print('next_line',next_line[:10])
-        # data=next_line[:10].tolist()
-        data={'data':next_line}
-
-        data['msg']='返回预测结果'
+            data['msg']='返回预测结果'
+        else:
+            data={'msg':'数据不完整'}
+            cache.set(key ,data)
     else:
-        data={'msg':'数据不完整'}
+        print('获取缓存')
+        data = cache.get(key)
     return jsonify(data)
     # return "Hello World!"
 @app.route("/json/sentence/fenci")
@@ -492,12 +549,21 @@ def json_sentence_fenci():
     
     """
     text = request.args.get('text')
-    seg_list=yuce(text)
-    data={
-        'seg_list':seg_list,
-        'text':text
 
-    }
+    key=terry_cache_key('json_sentence_fenci',text)
+    
+    if cache.get(key) is None:
+
+        seg_list=yuce(text)
+        data={
+            'seg_list':seg_list,
+            'text':text
+
+        }
+        cache.set(key ,data)
+    else:
+        print('获取缓存')
+        data = cache.get(key)
     return jsonify(data)
 
 
@@ -512,50 +578,47 @@ def json_sentence_fenci_update():
     # print('data',data)
     text1 = request.args.get('text1')
     text2 = request.args.get('text2')
-    # previous_line=request.args.get('sentence')
-    # text = data['text']
-    # text2 = data['text2']
-    # seg_list=[]
-    # for it in jieba.cut(text, cut_all=False):
-    # # print("Default Mode: " + "/ ".join(seg_list))  # 精确模式
-    # # print()
-    #     seg_list.append(it)
+    key=terry_cache_key('json_sentence_fenci_update',text1+text2)
+    if cache.get(key) is None:
+
+        #保存词性训练数据
+        # libs_text= libs.Text()
+        text1_pseg  =libs.Text().text_part_pseg(text1)
+        text2_pseg  =libs.Text().text_part_pseg(text2)
+        file_pseg_write_obj = open("./data/mark/corpus_pseg.txt", 'a')
+        #python2可以用file替代open
+        # for var in mylist:
+        text_pseg = text1_pseg+"\n"+text2_pseg+"\n\n"
+        file_pseg_write_obj.writelines(text_pseg)
+        file_pseg_write_obj.close()
 
 
+        #保存训练数据
+        file_write_obj = open("./data/mark/corpus.txt", 'a')
+        #python2可以用file替代open
+        # for var in mylist:
+        text = text1+"\n"+text2+"\n\n"
+        file_write_obj.writelines(text)
 
-    #保存词性训练数据
-    # libs_text= libs.Text()
-    text1_pseg  =libs.Text().text_part_pseg(text1)
-    text2_pseg  =libs.Text().text_part_pseg(text2)
-    file_pseg_write_obj = open("./data/mark/corpus_pseg.txt", 'a')
-    #python2可以用file替代open
-    # for var in mylist:
-    text_pseg = text1_pseg+"\n"+text2_pseg+"\n\n"
-    file_pseg_write_obj.writelines(text_pseg)
-    file_pseg_write_obj.close()
-
-
-    #保存训练数据
-    file_write_obj = open("./data/mark/corpus.txt", 'a')
-    #python2可以用file替代open
-    # for var in mylist:
-    text = text1+"\n"+text2+"\n\n"
-    file_write_obj.writelines(text)
-
-    # 创建bert使用的训练数据
-    # #随机产生一条
-    # random_sentence_one()
+        # 创建bert使用的训练数据
+        # #随机产生一条
+        # random_sentence_one()
 
 
-        #先写入columns_name
-        # writer.writerow(["index","a_name","b_name"])
-        #写入多行用writerows
-        # writer.writerows([[text1,text2]])
+            #先写入columns_name
+            # writer.writerow(["index","a_name","b_name"])
+            #写入多行用writerows
+            # writer.writerows([[text1,text2]])
 
-    file_write_obj.close()
+        file_write_obj.close()
 
-    # 添加一条标记数据
-    add_sentence_one(text2)
+        # 添加一条标记数据
+        add_sentence_one(text2)
+        data={}
+        cache.set(key ,data)
+    else:
+        print('获取缓存')
+        data = cache.get(key)
     return jsonify('')
 
 
@@ -661,5 +724,6 @@ if __name__ == "__main__":
     # app.run()
     app.run(
         host='0.0.0.0',
-        port=9001,
-        debug=True)
+        port=9001
+        )
+        # debug=True

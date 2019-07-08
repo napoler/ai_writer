@@ -28,8 +28,11 @@ def prediction(text):
     执行命令行运行函数
     这里是简化
     """
-    cmd="../bin/python3 bert_run_jianxie.py --do jianxie --text "+text
-    output = './data/jianxie.json'
+    output = './data/jianxie'+str(time.time())+'.json'
+    cmd="../bin/python3 bert_run_jianxie.py --do jianxie --output "+output+" --text "+text
+    print(cmd)
+    # cmd="python3 bert_run_jianxie.py --text "+text
+    # output = './data/jianxie.json'
     inputfile=''
     data = run_cmd(cmd,inputfile,output)
     return data
@@ -91,9 +94,9 @@ def run ():
     parser = argparse.ArgumentParser(description='manual to this script')
     parser.add_argument('--model', type=str, default = '/mnt/data/dev/model/bert-rewrite-sentences/')
     # 需要加载的模型文件目录
-    parser.add_argument('--do', type=str, default = 'jianxie')
+    parser.add_argument('--do', type=str, default = None)
     # 需要执行的任务
-    parser.add_argument('--output', type=str, default = './data/jianxie.json')
+    parser.add_argument('--output', type=str, default = None)
     # output 输出路径
     parser.add_argument('--text', type=str, default = None)
 
@@ -135,7 +138,10 @@ def auto_sort(text,id):
     # new_text='。'.join(text_list_mini)
     # print('new_text',new_text)
     l=[]
-    next_s=random.choice(text_list)
+    #随机获取第一句
+    # next_s=random.choice(text_list)
+    # 第一句固定
+    next_s=text_list[0]
     Article=next_s
     print('文章开始:+++++++++++++')
     for i in range(0,len(text_list)):
@@ -182,11 +188,12 @@ def run_baidu(output,keyword):
     return
 def run_url_text(output,url):
     print("已经运行来")
+    print("保存获取url内容到:"+output)
     data= url_text(url)
 
     with open(output,"w") as f:
         json.dump(data,f)
-        print("保存获取url内容到:"+output)
+        
     return
 
 

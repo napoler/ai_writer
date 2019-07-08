@@ -18,11 +18,19 @@ config = configparser.ConfigParser()
 
 config.read("./config/config.ini")
 
+
+
 from random import sample
 # from MagicBaidu import MagicBaidu
 
+
+def terry_cache_key(fun_name,text):
+    md5_val = hashlib.md5(text.encode('utf8')).hexdigest()
+    key=fun_name+str(md5_val)
+    return key
+
 def run_auto_sort(text,id):
-    cmd="python3 bert_run_jianxie.py --do auto_sort --id "+id+" --text "+text
+    cmd="python3 bert_run_jianxie.py --do auto_sort --id '''"+id+"''' --text '''"+text+"'''"
 
     e = subprocess.call(cmd, shell=True)
     return e 
@@ -729,8 +737,11 @@ def yuce(text):
     执行命令行运行函数
     这里是简化
     """
-    cmd="python3 bert_run_jianxie.py --text "+text
-    output = './data/jianxie.json'
+    output = './data/jianxie'+str(time.time())+'.json'
+    cmd="../bin/python3 bert_run_jianxie.py --do jianxie --output "+output+' --text """'+text+'"""'
+    print(cmd)
+    # cmd="python3 bert_run_jianxie.py --text "+text
+    # output = './data/jianxie.json'
     inputfile=''
     data = run_cmd(cmd,inputfile,output)
     return data
@@ -743,7 +754,7 @@ def run_baidu(kwd):
     """
     # cmd_env="source activate;"
     output = './data/run_baidu'+str(time.time())+'.json'
-    cmd="../bin/python3 bert_run_jianxie.py --do baidu --text "+kwd+' --output '+output
+    cmd='../bin/python3 bert_run_jianxie.py --do baidu --text """'+kwd+'""" --output '+output
     print(cmd)
     inputfile=''
     data = run_cmd(cmd,inputfile,output)
@@ -755,7 +766,7 @@ def run_cmd_url_text(url):
     获取网页内容
     """
     output = './data/url_text'+str(time.time())+'.json'
-    cmd="../bin/python3 bert_run_jianxie.py --do url_text --url "+url+' --output '+output
+    cmd='../bin/python3 bert_run_jianxie.py --do url_text --url "'+url+'" --output '+output
     print(cmd)
     inputfile=''
     data = run_cmd(cmd,inputfile,output)

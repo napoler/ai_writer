@@ -5,7 +5,7 @@ backcall==0.1.0
 baidu-aip==2.2.13.0
 beautifulsoup4==4.7.1
 bert-sample==0.0.0.2
-bleach==3.1.0
+bleach==3.1.1
 boto3==1.9.159
 botocore==1.12.159
 bs4==0.0.1
